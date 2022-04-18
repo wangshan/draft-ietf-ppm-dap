@@ -724,25 +724,24 @@ aggregate output. That process is described in {{collect-flow}}.
 ### Aggregate Initialization {#agg-init}
 
 The leader begins aggregation by splitting each client Report into "report
-shares", one for each helper:
+shares", one for each helper. The leader then chooses which of these shares
+to include in a single aggregation flow. This is referred to as the candidate
+share set. All chosen shares in this set MUST pertain to the same PPM task.
+A single report share is encoded as follows:
 
 ~~~
 struct {
   Nonce nonce;
   Extension extensions<0..2^16-1>;
   HpkeCiphertext encrypted_input_share;
-} InputReportShare;
+} ReportShare;
 ~~~
 
-The leader then chooses which of these shares to include in a single aggregation flow.
-All chosen shares MUST pertain to the same PPM task.
-
-Once this set of report shares is identified, the leader extracts its own report
-shares and computes the initial preparation state. To do this, the leader aggregator
-attempts to decrypt its input share. It starts by looking up the HPKE config and
-corresponding secret key indicated by `encrypted_input_share.config_id`. If not found,
-then it MUST remove the report share from the set. Otherwise, it decrypts the payload
-with the following procedure:
+Once the set of report shares is identified, the leader decrypts its own input
+shares and computes the initial preparation state. To do this, the leader starts
+by looking up the HPKE config and corresponding secret key indicated by `encrypted_input_share.config_id`.
+If not found, then it MUST remove the report share from the set. Otherwise, it
+decrypts the payload with the following procedure:
 
 ~~~
 context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
@@ -754,31 +753,32 @@ input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
 
 where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
 `extensions` are the nonce and extensions of the report share respectively.
-If decryption fails, then the aggregator MUST fail with error `hpke-decrypt-error`.
+If decryption fails, the leader marks this report as invalid and removes it
+from the set of candidate reports.
 
-Next, the aggregator runs the preparation-state initialization algorithm for the
+Next, the leader runs the preparation-state initialization algorithm for the
 VDAF associated with the task and computes the first state transition. Let
-`agg_param` denote the aggregation parameter, and let `input_share` denote the
-input share:
+`vdaf_verify_param` denote the pre-configured VDAF verification parameter,
+`agg_param` denote the aggregation parameter, `nonce` denote the report nonce,
+and let `input_share` denote the input share:
 
 ~~~
 agg_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
 ~~~
 
-Once the leader has initialized this state for all selected report shares, the
+Once the leader has initialized this state for all candidate report shares, the
 leader then creates an AggregateInitReq message for each helper to initialize the
-process of preparing a set of reports for aggregation. This message is structured
-as follows:
+process of aggregating this candidate set. This message is structured as follows:
 
 ~~~
 struct {
   TaskID task_id;
   opaque agg_param<0..2^16-1>;
-  InputReportShare seq<1..2^16-1>;
+  ReportShare seq<1..2^16-1>;
 } AggregateInitReq;
 ~~~
 
-The `nonce` and `extensions` fields of each InputReportShare match that in the Report
+The `nonce` and `extensions` fields of each ReportShare match that in the Report
 uploaded by the client. The `encrypted_input_share` field is the `HpkeCiphertext`
 whose index in `Report.encrypted_input_shares` is equal to the index of the aggregator
 in the task's `aggregator_endpoints`. The `agg_param` field is an opaque, VDAF-specific
@@ -792,9 +792,9 @@ To process the leader's request, the helper first checks that the nonces in
 `AggregateInitReq.seq` are all distinct. If two InputReportShare messages have the
 same nonce, then the helper MUST abort with error "unrecognizedMessage".
 
-Next, the initializates the preparation state for each report share in `AggregateInitReq.seq`.
-Each report share will either be processed successfully, or is otherwise invalid,
-being marked with one of the following errors:
+Next, the helper initializates the preparation state for each report share in
+`AggregateInitReq.seq`. Each report share will either be processed successfully
+or is otherwise invalid, being marked with one of the following errors:
 
 ~~~
 enum {
@@ -807,21 +807,21 @@ enum {
 } ReportShareError;
 ~~~
 
-Processing a report share begins by first checking if the report has already been aggregated.
-This is the case if the report was used in a previous aggregate request, and is therefore a replay.
-In this case, the helper marks the report as invalid with the `report-replayed` error.
-Note that detecting whether a report has been replayed (i.e., it has been
-aggregated but not yet collected) requires each aggregator to store the nonces
-of reports that have been aggregated in uncollected batch intervals. So that the
-aggregator does not have to maintain this storage indefinitely, it MAY instead
-mark the report invalid with `report-dropped` under the conditions prescribed in
-{{anti-replay}}.
+Processing a report share begins by first checking if the report has already
+been aggregated. This is the case if the report was used in a previous aggregate
+request and is therefore a replay. In this case, the helper marks the report as
+invalid with the `report-replayed` error. Note that detecting whether a report
+has been replayed (i.e., it has been aggregated but not yet collected) requires
+each aggregator to store the nonces of reports that have been aggregated in
+uncollected batch intervals. So that the aggregator does not have to maintain
+this storage indefinitely, it MAY instead mark the report invalid with `report-dropped`
+under the conditions prescribed in {{anti-replay}}.
 
 Next, the aggregator attempts to decrypt its input share. It starts by looking
 up the HPKE config and corresponding secret key indicated by
-`encrypted_input_share.config_id`. If not found, then it MUST fail with error
-`hpke-unknown-config-id`. Otherwise, it decrypts the payload with the following
-procedure:
+`encrypted_input_share.config_id`. If not found, then it marks the report
+as invalid with error `hpke-unknown-config-id`. Otherwise, it decrypts the
+payload with the following procedure:
 
 ~~~
 context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
@@ -833,18 +833,17 @@ input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
 
 where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
 `extensions` are the nonce and extensions of the report share respectively.
-If decryption fails, then the aggregator MUST fail with error `hpke-decrypt-error`.
+If decryption fails, then the aggregator marks the report as invalid with
+error `hpke-decrypt-error`.
 
 Next, the helper runs the preparation-state initialization algorithm for the
-VDAF associated with the task and computes the first state transition. Let
-`agg_param` denote the aggregation parameter, and let `input_share` denote the
-input share:
+VDAF associated with the task and computes the first state transition:
 
 ~~~
 agg_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
 ~~~
 
-If this step fails, the aggregator MUST mark the report as invalid with error
+If this step fails, the helper marks the report as invalid with error
 `vdaf-prep-error`. Otherwise, the helper produces an initial outbound message:
 
 ~~~
@@ -859,7 +858,7 @@ the pair `(new_state, agg_msg)`, where `new_state` is its updated state and `agg
 is its next VDAF message. For the latter case, the helper sets `agg_state` to `new_state`.
 
 Once the helper has processed each report share in `AggregateInitReq.seq`, the helper
-then creates an AggregateResp message to complete its initialization. This message is
+then creates an AggregateContinueResp message to complete its initialization. This message is
 structured as follows:
 
 ~~~
@@ -893,25 +892,29 @@ how the state is encrypted and the information that it carries is up to the
 helper implementation.
 
 The rest of the message is a sequence of ProcessShare values, the order of which
-matches that of the InputReportShare values in `AggregateInitReq.seq`. The helper's
-response to the leader is an HTTP 200 OK whose body is the AggregateInitResp and
-media type is "message/ppm-aggregate-init-resp".
+matches that of the InputReportShare values in `AggregateInitReq.seq`. Each report
+that was marked as invalid is assigned the ProcessType `failed`. Otherwise, the
+ProcessShare is either marked as continued with the output `agg_msg`, or is marked
+as finished if the VDAF computation is finished.
 
-The leader handles the AggregateInitResp as follows. It first checks that the
+The helper's response to the leader is an HTTP 200 OK whose body is the
+AggregateInitResp and media type is "message/ppm-aggregate-init-resp".
+
+Upon receipt of a helper's AggregateInitResp message, the leader checks that the
 sequence of ProcessShare messages corresponds to the InputReportShare sequence of the
 AggregateInitReq. If any message appears out of order, is missing, has an
 unrecognized nonce, or if two messages have the same nonce, then the leader MUST
-abort with error "unrecognizedMessage". Finally, the leader removes from the report
-sequence any report for which the corresponding ProcessType is 'failed'.
+abort with error "unrecognizedMessage".
 
 ### Aggregate Continuation {#agg-continue-flow}
 
-In the continuation phase, the leader drives aggregation of each share until the
-underlying VDAF moves into a terminal state, which happens either when aggregation
-completes or an error occurs. The leader does this by repeating the following
-procedure.
+In the continuation phase, the leader drives aggregation of each share in the candidate
+report set until the underlying VDAF moves into a terminal state, which happens either
+when aggregation completes or an error occurs. The leader does this by repeating the
+following procedure.
 
-* If the helper failed, then mark the report as failed and do not process it further.
+* If the helper failed, then mark the report as failed, remove it from the candidate
+  report set, and do not process it further.
 * If the leader continued but the helper finished, or if the leader finished but
   the helper continued, then mark the report as failed and do not process it further.
 * If the leader and helper finished, then continuation is complete. At this point the
@@ -927,9 +930,7 @@ and let `helper_outbound` denote the last VDAF message it received from the help
 The payload of the the ProcessShare message is computed as
 
 ~~~
-inbound = prep_shares_to_prep(agg_param,
-                              [leader_outbound,
-                               helper_outbound])
+inbound = VDAF.prep_shares_to_prep(agg_param, [leader_outbound, helper_outbound])
 ~~~
 
 where [leader_outbound, helper_outbound] is a vector of two elements. The next state
@@ -947,24 +948,22 @@ where `new_state` is its new preparation state and `outbound` is its next VDAF m
 and continues with `outbound` as its next VDAF message. The leader sets `agg_state`
 to `new_state`.
 
-<!-- XXX(caw): rename to AggregateContinueReq -->
-
-The leader then sends each ProcessShare to the helper in an AggregateReq message,
+The leader then sends each ProcessShare to the helper in an AggregateContinueReq message,
 structured as follows:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
   ProcessShare seq<1..2^16-1>;
-} AggregateReq;
+} AggregateContinueReq;
 ~~~
 
-For each aggregator endpoint `[aggregator]` in `AggregateReq.task_id`'s
+For each aggregator endpoint `[aggregator]` in `AggregateContinueReq.task_id`'s
 parameters except its own, the leader sends a POST request to
-`[aggregator]/aggregate` with AggregateReq as the payload and the media
-type set to "message/ppm-aggregate-req".
+`[aggregator]/aggregate` with AggregateContinueReq as the payload and the media
+type set to "message/ppm-aggregate-continue-req".
 
-For each ProcessShare in AggregateReq.seq received from the leader, the helper
+For each ProcessShare in AggregateContinueReq.seq received from the leader, the helper
 proceeds as follows:
 
 * If failed, then mark the report as failed and reply with a failed ProcessShare
@@ -990,27 +989,27 @@ the helper interpets `out` as the tuple `(new_state, agg_msg)`, where
 `new_state` is its updated preperation state and `agg_msg` is its next VDAF
 message.
 
-This output message for each report in AggregateReq.seq is then sent to the leader
-in an AggregateResp message, structured as follows:
+This output message for each report in AggregateContinueReq.seq is then sent to the leader
+in an AggregateContinueResp message, structured as follows:
 
 ~~~
 struct {
   opaque helper_state<0..2^16>;
   ProcessShare seq<1..2^16-1>;
-} AggregateResp;
+} AggregateContinueResp;
 ~~~
 
-The order of AggregateResp.seq matches that of the InputReportShare values in
-`AggregateReq.seq`. The helper's response to the leader is an HTTP 200 OK whose body
-is the AggregateInitResp and media type is "message/ppm-aggregate-resp". The helper
+The order of AggregateContinueResp.seq matches that of the InputReportShare values in
+`AggregateContinueReq.seq`. The helper's response to the leader is an HTTP 200 OK whose body
+is the AggregateInitResp and media type is "message/ppm-aggregate-continue-resp". The helper
 then awaits the next message from the leader.
 
 ### Aggregate Completion {#agg-complete}
 
-Once processing of a report share is finsihed, each aggregator stores the the
+Once processing of a report share is finished, each aggregator stores the the
 recovered output share until the batch to which it pertains is collected.
-To aggregate the output shares, the aggregator runs the aggregation algorithm
-specified by the VDAF:
+To aggregate the output shares, denoted `out_shares`, the aggregator runs
+the aggregation algorithm specified by the VDAF:
 
 ~~~
 agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
@@ -1216,7 +1215,7 @@ context = SetupBaseR(share.enc, sk,
 input_share = context.Open(batch_interval, share.payload)
 ~~~
 
-where `sk` is the HPKE secret key, `task_id` is `AggregateReq.task_id` and
+where `sk` is the HPKE secret key, `task_id` is `AggregateContinueReq.task_id` and
 `server_role` is the role of the server that sent the aggregate share (`0x02`
 for the leader and `0x03` for the helper). `batch_interval` is the `Interval`
 from the `CollectReq`. The collector then unshards the aggregate shares into an
@@ -1696,8 +1695,8 @@ corresponding media types types:
 - Report {{upload-request}}: "message/ppm-report"
 - AggregateInitReq {{collect-flow}}: "message/ppm-aggregate-init-req"
 - AggregateInitResp {{collect-flow}}: "message/ppm-aggregate-init-resp"
-- AggregateReq {{collect-flow}}: "message/ppm-aggregate-req"
-- AggregateResp {{collect-flow}}: "message/ppm-aggregate-resp"
+- AggregateContinueReq {{collect-flow}}: "message/ppm-aggregate-continue-req"
+- AggregateContinueResp {{collect-flow}}: "message/ppm-aggregate-continue-resp"
 - AggregateShareReq {{collect-flow}}: "message/ppm-aggregate-share-req"
 - AggregateShareResp {{collect-flow}}: "message/ppm-aggregate-share-resp"
 - CollectReq {{collect-flow}}: "message/ppm-collect-req"
@@ -1856,7 +1855,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-req" media type
+### "message/ppm-aggregate-continue-req" media type
 
 Type name:
 
@@ -1864,7 +1863,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-req
+: ppm-aggregate-continue-req
 
 Required parameters:
 
@@ -1927,7 +1926,7 @@ Change controller:
 
 : IESG
 
-### "message/ppm-aggregate-resp" media type
+### "message/ppm-aggregate-continue-resp" media type
 
 Type name:
 
@@ -1935,7 +1934,7 @@ Type name:
 
 Subtype name:
 
-: ppm-aggregate-resp
+: ppm-aggregate-continue-resp
 
 Required parameters:
 
