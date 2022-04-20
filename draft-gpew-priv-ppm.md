@@ -1160,7 +1160,7 @@ and MUST get the same result each time.
 
 After issuing an aggregate-share request for a given batch interval, it is an
 error for the leader to issue any more aggregate or aggregate-init requests for
-reports in the batch interval. These reports will be rejected by helpers as
+additional reports in the batch interval. These reports will be rejected by helpers as
 described {{agg-init}}.
 
 The leader then computes its own aggregate share `agg_share` by aggregating all
