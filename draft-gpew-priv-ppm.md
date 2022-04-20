@@ -766,8 +766,8 @@ and let `input_share` denote the input share:
 agg_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
 ~~~
 
-Once the leader has initialized this state for all candidate report shares, the
-leader then creates an AggregateInitReq message for each helper to initialize the
+Once the leader has initialized this state for all candidate report shares, it
+then creates an AggregateInitReq message for each helper to initialize the
 process of aggregating this candidate set. This message is structured as follows:
 
 ~~~
