@@ -754,7 +754,9 @@ input_share = context.Open(ReportShare.nonce || ReportShare.extensions,
 where `sk` is the HPKE secret key, `task_id` is the task ID, and `nonce` and
 `extensions` are the nonce and extensions of the report share respectively.
 If decryption fails, the leader marks this report as invalid and removes it
-from the set of candidate reports.
+from the set of candidate reports. Moreover, if the report has never been aggregated
+but is contained by a batch that has been collected, then the aggregator marks
+this report as invalid and removes it from the set of candidate reports.
 
 Next, the leader runs the preparation-state initialization algorithm for the
 VDAF associated with the task and computes the first state transition. Let
@@ -763,7 +765,7 @@ VDAF associated with the task and computes the first state transition. Let
 and let `input_share` denote the input share:
 
 ~~~
-agg_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
+prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
 ~~~
 
 Once the leader has initialized this state for all candidate report shares, it
@@ -815,7 +817,11 @@ has been replayed (i.e., it has been aggregated but not yet collected) requires
 each aggregator to store the nonces of reports that have been aggregated in
 uncollected batch intervals. So that the aggregator does not have to maintain
 this storage indefinitely, it MAY instead mark the report invalid with `report-dropped`
-under the conditions prescribed in {{anti-replay}}.
+under the conditions prescribed in {{anti-replay}}. The helper also checks to see
+if the report has never been aggregated but is contained by a batch that has been
+collected. If this is true, then the helper marks the report as invalid with error
+`batch-collected`. This prevents additional reports from being aggregated after its
+batch has already been collected.
 
 Next, the helper attempts to decrypt its input share. It starts by looking
 up the HPKE config and corresponding secret key indicated by
@@ -840,14 +846,14 @@ Next, the helper runs the preparation-state initialization algorithm for the
 VDAF associated with the task and computes the first state transition:
 
 ~~~
-agg_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
+prep_state = VDAF.prep_init(vdaf_verify_param, agg_param, nonce, input_share)
 ~~~
 
 If this step fails, the helper marks the report as invalid with error
 `vdaf-prep-error`. Otherwise, the helper produces an initial outbound message:
 
 ~~~
-out = VDAF.prep_next(agg_state, None)
+out = VDAF.prep_next(prep_state, None)
 ~~~
 
 The value `out` is interpreted as follows. If the VDAF is 0-round, then `out` is the
@@ -855,7 +861,7 @@ aggregator's output share, in which case the aggregator finishes and stores its
 output share for further processing as described in {{agg-complete}}. Otherwise,
 if the VDAF consists of one round or more, then the aggregator interprets `out` as
 the pair `(new_state, agg_msg)`, where `new_state` is its updated state and `agg_msg`
-is its next VDAF message. For the latter case, the helper sets `agg_state` to `new_state`.
+is its next VDAF message. For the latter case, the helper sets `prep_state` to `new_state`.
 
 Once the helper has processed each report share in `AggregateInitReq.seq`, the helper
 then creates an AggregateInitResp message to complete its initialization. This message is
@@ -939,7 +945,7 @@ where [leader_outbound, helper_outbound] is a vector of two elements. The next s
 transition is then computed as:
 
 ~~~
-out = VDAF.prep_next(agg_state, inbound)
+out = VDAF.prep_next(prep_state, inbound)
 ~~~
 
 If either of these operations fails, then the leader marks the report as invalid.
@@ -947,7 +953,7 @@ Otherwise it interprets `out` as follows. If this is the last round of VDAF
 preparation phase, then `out` is the leader's output share, in which case the leader
 finishes aggregation. Otherwise, it interprets `out` as the tuple `(new_state, outbound)`,
 where `new_state` is its new preparation state and `outbound` is its next VDAF messaage,
-and continues with `outbound` as its next VDAF message. The leader sets `agg_state`
+and continues with `outbound` as its next VDAF message. The leader sets `prep_state`
 to `new_state`.
 
 The leader then sends each ProcessShare to the helper in an AggregateContinueReq message,
@@ -979,10 +985,10 @@ proceeds as follows:
 The helper computes its update state and output message as follows:
 
 ~~~
-out = VDAF.prep_next(agg_state, inbound)
+out = VDAF.prep_next(prep_state, inbound)
 ~~~
 
-where `inbound` is the previous VDAF message sent by the leader and `agg_state` is
+where `inbound` is the previous VDAF message sent by the leader and `prep_state` is
 its current preparation state. If this operation fails, then the helper fails
 with error `vdaf-prep-error`. Otherwise, it interprets `out` as follows. If this
 is the last round of VDAF preparation phase, then `out` is the helper's output
