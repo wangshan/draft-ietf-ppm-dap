@@ -776,6 +776,7 @@ process of aggregating this candidate set. This message is structured as follows
 struct {
   TaskID task_id;
   opaque agg_param<0..2^16-1>;
+  opaque helper_state<0..2^16>;
   ReportShare seq<1..2^16-1>;
 } AggregateInitReq;
 ~~~
@@ -784,7 +785,9 @@ The `nonce` and `extensions` fields of each ReportShare match that in the Report
 uploaded by the client. The `encrypted_input_share` field is the `HpkeCiphertext`
 whose index in `Report.encrypted_input_shares` is equal to the index of the aggregator
 in the task's `aggregator_endpoints`. The `agg_param` field is an opaque, VDAF-specific
-aggregation parameter.
+aggregation parameter. The `helper_state` parameter contains the helper's state.
+This is an optional parameter of an aggregate request that the helper can use to carry
+state across requests and across aggregate flows.
 
 Let `[aggregator]` denote the helper's API endpoint. The leader sends a POST
 request to `[aggregator]/aggregate` with its AggregateInitReq message as
