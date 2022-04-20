@@ -817,7 +817,7 @@ uncollected batch intervals. So that the aggregator does not have to maintain
 this storage indefinitely, it MAY instead mark the report invalid with `report-dropped`
 under the conditions prescribed in {{anti-replay}}.
 
-Next, the aggregator attempts to decrypt its input share. It starts by looking
+Next, the helper attempts to decrypt its input share. It starts by looking
 up the HPKE config and corresponding secret key indicated by
 `encrypted_input_share.config_id`. If not found, then it marks the report
 as invalid with error `hpke-unknown-config-id`. Otherwise, it decrypts the
