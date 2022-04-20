@@ -1155,7 +1155,7 @@ computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 After receiving the helper's response, the leader uses the HpkeCiphertext to
 respond to a collect request (see {{collect-flow}}).
 
-The leader MAY make multiple aggregate-share requests for a given batch interval and
+The leader MAY make multiple aggregate-share requests for a given batch interval
 and aggregation parameter MUST get the same result each time.
 
 After issuing an aggregate-share request for a given batch interval, it is an
