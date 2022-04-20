@@ -714,8 +714,8 @@ The aggregation flow can be thought of as having three phases:
   the corresponding measurement task.
 - Continuation: Continue the aggregation flow by exchanging messages produced
   by the underlying VDAF instance until aggregation completes or an error occurs.
-- Completion: Finish the aggregate flow, yielding an output share corresponding
-  to all input shares in the batch.
+- Completion: Finish the aggregate flow, yielding an aggregate share corresponding
+  to all output shares in the batch.
 
 Once both aggregation is complete and a sufficient number of reports have
 been aggregated, the output shares can be collected to produce the final,
