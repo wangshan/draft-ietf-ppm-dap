@@ -903,7 +903,7 @@ The helper's response to the leader is an HTTP 200 OK whose body is the
 AggregateInitResp and media type is "message/ppm-aggregate-init-resp".
 
 Upon receipt of a helper's AggregateInitResp message, the leader checks that the
-sequence of ProcessShare messages corresponds to the InputReportShare sequence of the
+sequence of ProcessShare messages corresponds to the ReportShare sequence of the
 AggregateInitReq. If any message appears out of order, is missing, has an
 unrecognized nonce, or if two messages have the same nonce, then the leader MUST
 abort with error "unrecognizedMessage".
