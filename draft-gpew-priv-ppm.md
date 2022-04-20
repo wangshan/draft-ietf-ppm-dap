@@ -1152,7 +1152,7 @@ struct {
 computed above and `encrypted_aggregate_share.ciphertext` is the ciphertext
 `encrypted_agg_share` computed above.
 
-After receiving the helper's respjonse, the leader uses the HpkeCiphertext to
+After receiving the helper's response, the leader uses the HpkeCiphertext to
 respond to a collect request (see {{collect-flow}}).
 
 The leader MAY make multiple aggregate-share requests for a given batch interval
