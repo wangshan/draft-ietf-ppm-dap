@@ -718,7 +718,7 @@ The aggregation flow can be thought of as having three phases:
   to all output shares in the batch.
 
 Once both aggregation is complete and a sufficient number of reports have
-been aggregated, the output shares can be collected to produce the final,
+been aggregated, the aggregate shares can be collected to produce the final,
 aggregate output. That process is described in {{collect-flow}}.
 
 ### Aggregate Initialization {#agg-init}
