@@ -891,6 +891,8 @@ encrypted in order to protect user privacy. However, the details of precisely
 how the state is encrypted and the information that it carries is up to the
 helper implementation.
 
+[[OPEN ISSUE: we may end up removing helper_state. See #185]]
+
 The rest of the message is a sequence of ProcessShare values, the order of which
 matches that of the InputReportShare values in `AggregateInitReq.seq`. Each report
 that was marked as invalid is assigned the ProcessType `failed`. Otherwise, the
