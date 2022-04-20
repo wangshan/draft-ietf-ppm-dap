@@ -858,7 +858,7 @@ the pair `(new_state, agg_msg)`, where `new_state` is its updated state and `agg
 is its next VDAF message. For the latter case, the helper sets `agg_state` to `new_state`.
 
 Once the helper has processed each report share in `AggregateInitReq.seq`, the helper
-then creates an AggregateContinueResp message to complete its initialization. This message is
+then creates an AggregateInitResp message to complete its initialization. This message is
 structured as follows:
 
 ~~~
