@@ -1658,10 +1658,10 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    4.  Attacks may also come from the network.  Thus, it is required
        that the aggregators and collector communicate with one another
-       over mutually authenticated channels.  The core PPM spec does not
-       specify such a mechanisn beyond requiring server authentication
-       for HTTPS sessions.  Note that clients are not required to
-       authenticate themselves.
+       over mutually authenticated and confidential channels.  The core
+       PPM spec does not specify such a mechanisn beyond requiring
+       server authentication for HTTPS sessions.  Note that clients are
+       not required to authenticate themselves.
 
 6.1.  Threat model
 
