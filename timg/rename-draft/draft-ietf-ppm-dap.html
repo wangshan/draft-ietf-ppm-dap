@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>Privacy Preserving Measurement</title>
+<title>Distributed Aggregation Protocol for Privacy Preserving Measurement</title>
 <meta content="Tim Geoghegan" name="author">
 <meta content="Christopher Patton" name="author">
 <meta content="Eric Rescorla" name="author">
@@ -16,8 +16,9 @@ measurement is usually not interested in people's individual responses but
 rather in aggregated data. Conventional methods require collecting individual
 responses and then aggregating them, thus representing a threat to user privacy
 and rendering many such measurements difficult and impractical. This document
-describes a multi-party privacy preserving measurement (PPM) protocol which can
-be used to collect aggregate data without revealing any individual user's data. 
+describes a multi-party distributed aggregation protocol (DAP) for privacy
+preserving measurement (PPM) which can be used to collect aggregate data without
+revealing any individual user's data. 
     " name="description">
 <meta content="xml2rfc 3.12.5" name="generator">
 <meta content="draft-ietf-ppm-dap-latest" name="ietf.draft">
@@ -1021,7 +1022,7 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
-<td class="center">Privacy Preserving Measurement</td>
+<td class="center">Distributed Aggregation Protocol for Pri</td>
 <td class="right">May 2022</td>
 </tr></thead>
 <tfoot><tr>
@@ -1066,7 +1067,7 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 </dd>
 </dl>
 </div>
-<h1 id="title">Privacy Preserving Measurement</h1>
+<h1 id="title">Distributed Aggregation Protocol for Privacy Preserving Measurement</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">There are many situations in which it is desirable to take measurements of data
@@ -1075,8 +1076,9 @@ measurement is usually not interested in people's individual responses but
 rather in aggregated data. Conventional methods require collecting individual
 responses and then aggregating them, thus representing a threat to user privacy
 and rendering many such measurements difficult and impractical. This document
-describes a multi-party privacy preserving measurement (PPM) protocol which can
-be used to collect aggregate data without revealing any individual user's data.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+describes a multi-party distributed aggregation protocol (DAP) for privacy
+preserving measurement (PPM) which can be used to collect aggregate data without
+revealing any individual user's data.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1385,13 +1387,13 @@ be used to collect aggregate data without revealing any individual user's data.<
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">This document describes a protocol for privacy preserving measurement. The
-protocol is executed by a large set of clients and a small set of servers. The
-servers' goal is to compute some aggregate statistic over the clients' inputs
-without learning the inputs themselves. This is made possible by distributing
-the computation among the servers in such a way that, as long as at least one of
-them executes the protocol honestly, no input is ever seen in the clear by any
-server.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-1">This document describes a distributed aggregation protocol for privacy
+preserving measurement. The protocol is executed by a large set of clients and a
+small set of servers. The servers' goal is to compute some aggregate statistic
+over the clients' inputs without learning the inputs themselves. This is made
+possible by distributing the computation among the servers in such a way that,
+as long as at least one of them executes the protocol honestly, no input is ever
+seen in the clear by any server.<a href="#section-1-1" class="pilcrow">¶</a></p>
 <div id="disclaimer">
 <section id="section-1.1">
         <h3 id="name-disclaimer">
