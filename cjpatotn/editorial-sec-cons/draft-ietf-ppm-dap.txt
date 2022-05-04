@@ -1613,14 +1613,13 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    1.  Privacy.  Clients trust that some aggregator is honest.  That is,
        as long as at least one aggregator executes the protocol
-       faithfully as specified, and only executes the protocol as
-       specified, the parties learn nothing beyond the aggregate result
+       faithfully, the parties learn nothing beyond the aggregate result
        (i.e., the output of the aggregation function computed over the
        honest measurements).
 
    2.  Correctness.  The collector trusts that the aggregators execute
        the protocol correctly.  That is, as long as the aggregators
-       execute their roles as specified, a malicious client can skew the
+       execute the protocol faithfully, a malicious client can skew the
        aggregate result only by reporting a false (untruthful)
        measurement.  The result cannot be influenced in any other way.
 
