@@ -1660,7 +1660,10 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
        over mutually authenticated and confidential channels.  The core
        PPM spec does not specify such a mechanism beyond requiring
        server authentication for HTTPS sessions.  Note that clients are
-       not required to authenticate themselves.
+       not required to authenticate themselves.  [OPEN ISSUE: It might
+       be better to be prescriptive about leader authentication in
+       leader-helper channels and collector authenticaiton in collector-
+       leader channels.  For the latter we have issue#155.]
 
 6.1.  Threat model
 

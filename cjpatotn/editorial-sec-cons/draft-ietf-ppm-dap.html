@@ -3055,7 +3055,10 @@ implemented, so we're not yet sure if the current mechanism is sufficient.]<a hr
 aggregators and collector communicate with one another over mutually
 authenticated and confidential channels. The core PPM spec does not specify
 such a mechanism beyond requiring server authentication for HTTPS sessions.
-Note that clients are not required to authenticate themselves.<a href="#section-6-5.4" class="pilcrow">¶</a>
+Note that clients are not required to authenticate themselves. [OPEN ISSUE:
+It might be better to be prescriptive about leader authentication in
+leader-helper channels and collector authenticaiton in collector-leader
+channels. For the latter we have issue#155.]<a href="#section-6-5.4" class="pilcrow">¶</a>
 </li>
       </ol>
 <div id="threat-model">
