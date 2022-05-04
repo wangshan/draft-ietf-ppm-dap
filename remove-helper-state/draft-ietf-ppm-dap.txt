@@ -5,16 +5,16 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 31 October 2022                                      Cloudflare
+Expires: 5 November 2022                                      Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                           29 April 2022
+                                                              4 May 2022
 
 
-                     Privacy Preserving Measurement
-                       draft-gpew-priv-ppm-latest
+  Distributed Aggregation Protocol for Privacy Preserving Measurement
+                       draft-ietf-ppm-dap-latest
 
 Abstract
 
@@ -25,9 +25,9 @@ Abstract
    Conventional methods require collecting individual responses and then
    aggregating them, thus representing a threat to user privacy and
    rendering many such measurements difficult and impractical.  This
-   document describes a multi-party privacy preserving measurement (PPM)
-   protocol which can be used to collect aggregate data without
-   revealing any individual user's data.
+   document describes a multi-party distributed aggregation protocol
+   (DAP) for privacy preserving measurement (PPM) which can be used to
+   collect aggregate data without revealing any individual user's data.
 
 Discussion Venues
 
@@ -37,7 +37,7 @@ Discussion Venues
    is archived at .
 
    Source for this draft and an issue tracker can be found at
-   https://github.com/abetterinternet/ppm-specification.
+   https://github.com/ietf-wg-ppm/ppm-specification.
 
 Status of This Memo
 
@@ -54,7 +54,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 October 2022.
+   This Internet-Draft will expire on 5 November 2022.
 
 Copyright Notice
 
@@ -144,14 +144,14 @@ Table of Contents
 
 1.  Introduction
 
-   This document describes a protocol for privacy preserving
-   measurement.  The protocol is executed by a large set of clients and
-   a small set of servers.  The servers' goal is to compute some
-   aggregate statistic over the clients' inputs without learning the
-   inputs themselves.  This is made possible by distributing the
-   computation among the servers in such a way that, as long as at least
-   one of them executes the protocol honestly, no input is ever seen in
-   the clear by any server.
+   This document describes a distributed aggregation protocol for
+   privacy preserving measurement.  The protocol is executed by a large
+   set of clients and a small set of servers.  The servers' goal is to
+   compute some aggregate statistic over the clients' inputs without
+   learning the inputs themselves.  This is made possible by
+   distributing the computation among the servers in such a way that, as
+   long as at least one of them executes the protocol honestly, no input
+   is ever seen in the clear by any server.
 
 1.1.  DISCLAIMER
 
@@ -298,7 +298,7 @@ Table of Contents
                        Figure 1: System Architecture
 
    [[OPEN ISSUE: This shows two helpers, but the document only allows
-   one for now. https://github.com/abetterinternet/ppm-specification/
+   one for now. https://github.com/ietf-wg-ppm/ppm-specification/
    issues/117]]
 
    The main participants in the protocol are as follows:
@@ -1952,9 +1952,8 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    protocol runs do not agree, then participants know that at least one
    aggregator is defective, and it may be possible to identify the
    defector (i.e., if a majority of runs agree, and a single aggregator
-   appears in every run that disagrees).  See #22
-   (https://github.com/abetterinternet/ppm-specification/issues/22) for
-   discussion.
+   appears in every run that disagrees).  See #22 (https://github.com/
+   ietf-wg-ppm/ppm-specification/issues/22) for discussion.
 
 6.7.  Infrastructure diversity
 
