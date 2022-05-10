@@ -487,11 +487,10 @@ Table of Contents
    token encoded in Base64 and using the URL-safe alphabet defined in
    [RFC4648].
 
-   To authenticate the request, the receiver looks up the bearer token
-   for the sender as determined by the task configuration.  (See
-   Section 4.1.)  If the value of the "PPM-Auth-Token" header does not
-   match the bearer token, then the receiver MUST abort with error
-   "unauthorizedRequest".
+   To authenticate the request, the receiver looks up the token for the
+   sender as determined by the task configuration.  (See Section 4.1.)
+   If the value of the "DAP-Auth-Token" header does not match the token,
+   then the receiver MUST abort with error "unauthorizedRequest".
 
    [OPEN ISSUE: This simple bearer-token scheme is meant to unblock
    interop testing.  Eventually it should be replaced with a more secure
