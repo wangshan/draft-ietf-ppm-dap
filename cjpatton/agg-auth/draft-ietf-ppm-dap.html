@@ -1820,11 +1820,10 @@ describe how protocol participants react to various error conditions.<a href="#s
 <p id="section-3.2-1">Some HTTP requests in the PPM protocol require the sender to authenticate its
 request. It does so as described here.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <p id="section-3.2-2">Prior to the start of the protocol, the sender and receiver arrange to share a
-bearer token. The bearer token is an opaque, 32-byte string that <span class="bcp14">MUST</span> be
-generated using a cryptographically secure random number generator.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
+secret sender-specific API token, which <span class="bcp14">MUST</span> be suitable for representation in
+an HTTP header.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
 <p id="section-3.2-3">For requests requiring authentication, the sender includes a "DAP-Auth-Token"
-header in its HTTP request whose value is the bearer token encoded in Base64 and
-using the URL-safe alphabet defined in <span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span>.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+header in its HTTP request containing the API token.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
 <p id="section-3.2-4">To authenticate the request, the receiver looks up the token for the
 sender as determined by the task configuration. (See <a href="#task-configuration" class="xref">Section 4.1</a>.) If
 the value of the "DAP-Auth-Token" header does not match the token, then

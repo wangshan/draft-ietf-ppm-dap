@@ -492,14 +492,11 @@ Table of Contents
    authenticate its request.  It does so as described here.
 
    Prior to the start of the protocol, the sender and receiver arrange
-   to share a bearer token.  The bearer token is an opaque, 32-byte
-   string that MUST be generated using a cryptographically secure random
-   number generator.
+   to share a secret sender-specific API token, which MUST be suitable
+   for representation in an HTTP header.
 
    For requests requiring authentication, the sender includes a "DAP-
-   Auth-Token" header in its HTTP request whose value is the bearer
-   token encoded in Base64 and using the URL-safe alphabet defined in
-   [RFC4648].
+   Auth-Token" header in its HTTP request containing the API token.
 
    To authenticate the request, the receiver looks up the token for the
    sender as determined by the task configuration.  (See Section 4.1.)
