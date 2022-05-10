@@ -83,7 +83,7 @@ Table of Contents
    4.  Protocol Definition
      4.1.  Task Configuration
      4.2.  Uploading Reports
-       4.2.1.  Key Configuration Request
+       4.2.1.  HPKE Configuration Request
        4.2.2.  Upload Request
        4.2.3.  Upload Extensions
        4.2.4.  Leader State
@@ -410,7 +410,7 @@ Table of Contents
    Communications between PPM entities are carried over HTTPS [RFC2818].
    HTTPS provides server authentication and confidentiality.  In
    addition, report shares are encrypted directly to the aggregators
-   using HPKE [I-D.irtf-cfrg-hpke].
+   using HPKE [RFC9180].
 
 3.1.  Errors
 
@@ -576,14 +576,24 @@ struct {
    Clients periodically upload reports to the leader, which then
    distributes the individual shares to each helper.
 
-4.2.1.  Key Configuration Request
+4.2.1.  HPKE Configuration Request
 
    Before the client can upload its report to the leader, it must know
    the public key of each of the aggregators.  These are retrieved from
-   each aggregator by sending a request to [aggregator]/key_config,
-   where [aggregator] is the aggregator's endpoint URL, obtained from
-   the task parameters.  The aggregator responds to well-formed requests
-   with status 200 and an HpkeConfig value:
+   each aggregator by sending a request to
+   [aggregator]/hpke_config?task_id=[task-id], where [aggregator] is the
+   aggregator's endpoint URL, obtained from the task parameters, and
+   [task-id] is the task ID obtained from the task parameters, encoded
+   in Base 64 with URL and filename safe alphabet with no padding, as
+   specified in sections 5 and 3.2 of [RFC4648].  If the aggregator does
+   not recognize the task ID, then it responds with HTTP error status
+   404 Not Found and an error of type unrecognizedTask.  The aggregator
+   responds to well-formed requests with status 200 and an HpkeConfig
+   value:
+
+   [TODO: Allow aggregators to return HTTP 403 Forbidden in deployments
+   that use authentication to avoid leaking information about which
+   tasks exist.]
 
    struct {
      HpkeConfigId id;
@@ -594,23 +604,24 @@ struct {
    } HpkeConfig;
 
    opaque HpkePublicKey<1..2^16-1>;
-   uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
-   uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-   uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+   uint16 HpkeAeadId; // Defined in RFC9180
+   uint16 HpkeKemId;  // Defined in RFC9180
+   uint16 HpkeKdfId;  // Defined in RFC9180
 
    [OPEN ISSUE: Decide whether to expand the width of the id, or support
    multiple cipher suites (a la OHTTP/ECH).]
 
-   The client MUST abort if any of the following happen for any
-   key_config request:
+   The client MUST abort if any of the following happen for any HPKE
+   config request:
 
    *  the client and aggregator failed to establish a secure,
       aggregator-authenticated channel;
 
-   *  the GET request failed or didn't return a valid key config; or
+   *  the GET request failed or didn't return a valid HPKE
+      configuration; or
 
-   *  the key config specifies a KEM, KDF, or AEAD algorithm the client
-      doesn't recognize.
+   *  the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the
+      client doesn't recognize.
 
    Aggregators SHOULD use HTTP caching to permit client-side caching of
    this resource [RFC5861].  Aggregators SHOULD favor long cache
@@ -662,8 +673,8 @@ struct {
 
    To generate the report, the client begins by sharding its measurement
    into a sequence of input shares as specified by the VDAF in use.  To
-   encrypt an input share, the client first generates an HPKE
-   [I-D.irtf-cfrg-hpke] context for the aggregator by running
+   encrypt an input share, the client first generates an HPKE [RFC9180]
+   context for the aggregator by running
 
  enc, context = SetupBaseS(pk, Report.task_id || "ppm-00 input share" ||
                                0x01 || server_role)
@@ -1975,7 +1986,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    This specification defines the following protocol messages, along
    with their corresponding media types types:
 
-   *  HpkeConfig Section 4.1: "application/ppm-hpke-config"
+   *  HpkeConfig Section 4.2.1: "application/ppm-hpke-config"
 
    *  Report Section 4.2.2: "message/ppm-report"
 
@@ -2454,13 +2465,6 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
 9.1.  Normative References
 
-   [I-D.irtf-cfrg-hpke]
-              Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
-              "Hybrid Public Key Encryption", Work in Progress,
-              Internet-Draft, draft-irtf-cfrg-hpke-12, 2 September 2021,
-              <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
-              hpke-12>.
-
    [I-D.thomson-http-oblivious]
               Thomson, M. and C. A. Wood, "Oblivious HTTP", Work in
               Progress, Internet-Draft, draft-thomson-http-oblivious-02,
@@ -2505,6 +2509,10 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/rfc/rfc8446>.
+
+   [RFC9180]  Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
+              Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
+              February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
 
 9.2.  Informative References
 

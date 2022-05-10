@@ -1179,7 +1179,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                 <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="xref">4.2</a>.  <a href="#name-uploading-reports" class="xref">Uploading Reports</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.1">
-                    <p id="section-toc.1-1.4.2.2.2.1.1"><a href="#section-4.2.1" class="xref">4.2.1</a>.  <a href="#name-key-configuration-request" class="xref">Key Configuration Request</a></p>
+                    <p id="section-toc.1-1.4.2.2.2.1.1"><a href="#section-4.2.1" class="xref">4.2.1</a>.  <a href="#name-hpke-configuration-request" class="xref">HPKE Configuration Request</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.2">
                     <p id="section-toc.1-1.4.2.2.2.2.1"><a href="#section-4.2.2" class="xref">4.2.2</a>.  <a href="#name-upload-request" class="xref">Upload Request</a></p>
@@ -1728,7 +1728,7 @@ client could not report 10^6s or -20s.<a href="#section-2.2-5" class="pilcrow">�
       </h2>
 <p id="section-3-1">Communications between PPM entities are carried over HTTPS <span>[<a href="#RFC2818" class="xref">RFC2818</a>]</span>. HTTPS
 provides server authentication and confidentiality. In addition, report shares
-are encrypted directly to the aggregators using HPKE <span>[<a href="#I-D.irtf-cfrg-hpke" class="xref">I-D.irtf-cfrg-hpke</a>]</span>.<a href="#section-3-1" class="pilcrow">¶</a></p>
+are encrypted directly to the aggregators using HPKE <span>[<a href="#RFC9180" class="xref">RFC9180</a>]</span>.<a href="#section-3-1" class="pilcrow">¶</a></p>
 <div id="errors">
 <section id="section-3.1">
         <h3 id="name-errors">
@@ -1895,7 +1895,7 @@ of the aggregators is configured with following parameters:<a href="#section-4.1
 <ul class="normal">
 <li class="normal" id="section-4.1-6.1">
             <code>collector_config</code>: The HPKE configuration of the collector (described in
-<a href="#key-config" class="xref">Section 4.2.1</a>).<a href="#section-4.1-6.1" class="pilcrow">¶</a>
+<a href="#hpke-config" class="xref">Section 4.2.1</a>).<a href="#section-4.1-6.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-4.1-6.2">
             <code>vdaf_verify_param</code>: The aggregator's VDAF verification parameter output by
@@ -1915,17 +1915,24 @@ specified. See issue#161.]<a href="#section-4.1-6.2" class="pilcrow">¶</a>
         </h3>
 <p id="section-4.2-1">Clients periodically upload reports to the leader, which then distributes the
 individual shares to each helper.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
-<div id="key-config">
+<div id="hpke-config">
 <section id="section-4.2.1">
-          <h4 id="name-key-configuration-request">
-<a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-key-configuration-request" class="section-name selfRef">Key Configuration Request</a>
+          <h4 id="name-hpke-configuration-request">
+<a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-hpke-configuration-request" class="section-name selfRef">HPKE Configuration Request</a>
           </h4>
 <p id="section-4.2.1-1">Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
-sending a request to <code>[aggregator]/key_config</code>, where <code>[aggregator]</code> is the
-aggregator's endpoint URL, obtained from the task parameters. The aggregator
-responds to well-formed requests with status 200 and an <code>HpkeConfig</code> value:<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2.1-2">
+sending a request to <code>[aggregator]/hpke_config?task_id=[task-id]</code>, where
+<code>[aggregator]</code> is the aggregator's endpoint URL, obtained from the task
+parameters, and <code>[task-id]</code> is the task ID obtained from the task parameters,
+encoded in Base 64 with URL and filename safe alphabet with no padding, as
+specified in sections 5 and 3.2 of <span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span>. If the aggregator does not
+recognize the task ID, then it responds with HTTP error status 404 Not Found and
+an error of type <code>unrecognizedTask</code>. The aggregator responds to well-formed
+requests with status 200 and an <code>HpkeConfig</code> value:<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-2">[TODO: Allow aggregators to return HTTP 403 Forbidden in deployments that use
+authentication to avoid leaking information about which tasks exist.]<a href="#section-4.2.1-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.1-3">
 <pre>
 struct {
   HpkeConfigId id;
@@ -1936,39 +1943,39 @@ struct {
 } HpkeConfig;
 
 opaque HpkePublicKey&lt;1..2^16-1&gt;;
-uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
-uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
-</pre><a href="#section-4.2.1-2" class="pilcrow">¶</a>
+uint16 HpkeAeadId; // Defined in RFC9180
+uint16 HpkeKemId;  // Defined in RFC9180
+uint16 HpkeKdfId;  // Defined in RFC9180
+</pre><a href="#section-4.2.1-3" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2.1-3">[OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
-cipher suites (a la OHTTP/ECH).]<a href="#section-4.2.1-3" class="pilcrow">¶</a></p>
-<p id="section-4.2.1-4">The client <span class="bcp14">MUST</span> abort if any of the following happen for any <code>key_config</code>
-request:<a href="#section-4.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-4">[OPEN ISSUE: Decide whether to expand the width of the id, or support multiple
+cipher suites (a la OHTTP/ECH).]<a href="#section-4.2.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-5">The client <span class="bcp14">MUST</span> abort if any of the following happen for any HPKE config
+request:<a href="#section-4.2.1-5" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.2.1-5.1">the client and aggregator failed to establish a secure,
-aggregator-authenticated channel;<a href="#section-4.2.1-5.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.2.1-6.1">the client and aggregator failed to establish a secure,
+aggregator-authenticated channel;<a href="#section-4.2.1-6.1" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.2.1-5.2">the GET request failed or didn't return a valid key config; or<a href="#section-4.2.1-5.2" class="pilcrow">¶</a>
+            <li class="normal" id="section-4.2.1-6.2">the GET request failed or didn't return a valid HPKE configuration; or<a href="#section-4.2.1-6.2" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.2.1-5.3">the key config specifies a KEM, KDF, or AEAD algorithm the client doesn't
-recognize.<a href="#section-4.2.1-5.3" class="pilcrow">¶</a>
+            <li class="normal" id="section-4.2.1-6.3">the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the client
+doesn't recognize.<a href="#section-4.2.1-6.3" class="pilcrow">¶</a>
 </li>
           </ul>
-<p id="section-4.2.1-6">Aggregators <span class="bcp14">SHOULD</span> use HTTP caching to permit client-side caching of this
+<p id="section-4.2.1-7">Aggregators <span class="bcp14">SHOULD</span> use HTTP caching to permit client-side caching of this
 resource <span>[<a href="#RFC5861" class="xref">RFC5861</a>]</span>. Aggregators <span class="bcp14">SHOULD</span> favor long cache lifetimes to avoid
 frequent cache revalidation, e.g., on the order of days. Aggregators can control
-this cached lifetime with the Cache-Control header, as follows:<a href="#section-4.2.1-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.2.1-7">
+this cached lifetime with the Cache-Control header, as follows:<a href="#section-4.2.1-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.2.1-8">
 <pre>
   Cache-Control: max-age=86400
-</pre><a href="#section-4.2.1-7" class="pilcrow">¶</a>
+</pre><a href="#section-4.2.1-8" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2.1-8">Clients <span class="bcp14">SHOULD</span> follow the usual HTTP caching <span>[<a href="#RFC7234" class="xref">RFC7234</a>]</span> semantics for key
-configurations.<a href="#section-4.2.1-8" class="pilcrow">¶</a></p>
-<p id="section-4.2.1-9">Note: Long cache lifetimes may result in clients using stale HPKE keys;
+<p id="section-4.2.1-9">Clients <span class="bcp14">SHOULD</span> follow the usual HTTP caching <span>[<a href="#RFC7234" class="xref">RFC7234</a>]</span> semantics for key
+configurations.<a href="#section-4.2.1-9" class="pilcrow">¶</a></p>
+<p id="section-4.2.1-10">Note: Long cache lifetimes may result in clients using stale HPKE keys;
 aggregators <span class="bcp14">SHOULD</span> continue to accept reports with old keys for at least twice
-the cache lifetime in order to avoid rejecting reports.<a href="#section-4.2.1-9" class="pilcrow">¶</a></p>
+the cache lifetime in order to avoid rejecting reports.<a href="#section-4.2.1-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="upload-request">
@@ -2012,7 +2019,7 @@ be the leader's, the second share should be for the first helper, and so on).<a 
           </ul>
 <p id="section-4.2.2-5">To generate the report, the client begins by sharding its measurement into a
 sequence of input shares as specified by the VDAF in use. To encrypt an input
-share, the client first generates an HPKE <span>[<a href="#I-D.irtf-cfrg-hpke" class="xref">I-D.irtf-cfrg-hpke</a>]</span> context for
+share, the client first generates an HPKE <span>[<a href="#RFC9180" class="xref">RFC9180</a>]</span> context for
 the aggregator by running<a href="#section-4.2.2-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2.2-6">
 <pre>
@@ -3521,7 +3528,7 @@ the input shares and defeat privacy.<a href="#section-6.7-1" class="pilcrow">¶<
 <p id="section-7.1-1">This specification defines the following protocol messages, along with their
 corresponding media types types:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7.1-2.1">HpkeConfig <a href="#task-configuration" class="xref">Section 4.1</a>: "application/ppm-hpke-config"<a href="#section-7.1-2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-7.1-2.1">HpkeConfig <a href="#hpke-config" class="xref">Section 4.2.1</a>: "application/ppm-hpke-config"<a href="#section-7.1-2.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-7.1-2.2">Report <a href="#upload-request" class="xref">Section 4.2.2</a>: "message/ppm-report"<a href="#section-7.1-2.2" class="pilcrow">¶</a>
 </li>
@@ -4664,10 +4671,6 @@ specification.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
 <a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
-<dt id="I-D.irtf-cfrg-hpke">[I-D.irtf-cfrg-hpke]</dt>
-        <dd>
-<span class="refAuthor">Barnes, R. L.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-hpke-12</span>, <time datetime="2021-09-02" class="refDate">2 September 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-12">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hpke-12</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="I-D.thomson-http-oblivious">[I-D.thomson-http-oblivious]</dt>
         <dd>
 <span class="refAuthor">Thomson, M.</span> and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Oblivious HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-thomson-http-oblivious-02</span>, <time datetime="2021-08-24" class="refDate">24 August 2021</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-thomson-http-oblivious-02">https://datatracker.ietf.org/doc/html/draft-thomson-http-oblivious-02</a>&gt;</span>. </dd>
@@ -4705,8 +4708,12 @@ specification.<a href="#section-7.3-3" class="pilcrow">¶</a></p>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8446">[RFC8446]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08" class="refDate">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8446">https://www.rfc-editor.org/rfc/rfc8446</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9180">[RFC9180]</dt>
+      <dd>
+<span class="refAuthor">Barnes, R.</span>, <span class="refAuthor">Bhargavan, K.</span>, <span class="refAuthor">Lipp, B.</span>, and <span class="refAuthor">C. Wood</span>, <span class="refTitle">"Hybrid Public Key Encryption"</span>, <span class="seriesInfo">RFC 9180</span>, <span class="seriesInfo">DOI 10.17487/RFC9180</span>, <time datetime="2022-02" class="refDate">February 2022</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9180">https://www.rfc-editor.org/rfc/rfc9180</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
