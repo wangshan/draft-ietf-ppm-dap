@@ -84,10 +84,9 @@ Table of Contents
    4.  Protocol Definition
      4.1.  Task Configuration
      4.2.  Uploading Reports
-       4.2.1.  Key Configuration Request
+       4.2.1.  HPKE Configuration Request
        4.2.2.  Upload Request
        4.2.3.  Upload Extensions
-       4.2.4.  Leader State
      4.3.  Verifying and Aggregating Reports
        4.3.1.  Aggregate Initialization
        4.3.2.  Aggregate Continuation
@@ -428,27 +427,41 @@ Table of Contents
    following standard tokens for use in the "type" field (within the PPM
    URN namespace "urn:ietf:params:ppm:error:"):
 
-     +=====================+=========================================+
-     | Type                | Description                             |
-     +=====================+=========================================+
-     | unrecognizedMessage | The message type for a response was     |
-     |                     | incorrect or the payload was malformed. |
-     +---------------------+-----------------------------------------+
-     | unrecognizedTask    | An endpoint received a message with an  |
-     |                     | unknown task ID.                        |
-     +---------------------+-----------------------------------------+
-     | outdatedConfig      | The message was generated using an      |
-     |                     | outdated configuration.                 |
-     +---------------------+-----------------------------------------+
-     | batchInvalid        | A collect or aggregate-share request    |
-     |                     | was made with invalid batch parameters. |
-     +---------------------+-----------------------------------------+
-     | batchMismatch       | Aggregators disagree on the report      |
-     |                     | shares that were aggregated in a batch. |
-     +---------------------+-----------------------------------------+
-     | unauthorizedRequest | Authentication of an HTTP request       |
-     |                     | failed (see Section 3.2).               |
-     +---------------------+-----------------------------------------+
+    +=======================+=========================================+
+    | Type                  | Description                             |
+    +=======================+=========================================+
+    | unrecognizedMessage   | The message type for a response was     |
+    |                       | incorrect or the payload was malformed. |
+    +-----------------------+-----------------------------------------+
+    | unrecognizedTask      | An endpoint received a message with an  |
+    |                       | unknown task ID.                        |
+    +-----------------------+-----------------------------------------+
+    | outdatedConfig        | The message was generated using an      |
+    |                       | outdated configuration.                 |
+    +-----------------------+-----------------------------------------+
+    | reportTooLate         | Report could not be processed because   |
+    |                       | it arrived too late.                    |
+    +-----------------------+-----------------------------------------+
+    | reportTooEarly        | Report could not be processed because   |
+    |                       | its timestamp is too far in the future. |
+    +-----------------------+-----------------------------------------+
+    | batchInvalid          | A collect or aggregate-share request    |
+    |                       | was made with invalid batch parameters. |
+    +-----------------------+-----------------------------------------+
+    | insufficientBatchSize | There are not enough reports in the     |
+    |                       | batch interval to satisfy the task's    |
+    |                       | minimum batch size.                     |
+    +-----------------------+-----------------------------------------+
+    | batchLifetimeExceeded | The batch lifetime has been exceeded    |
+    |                       | for one or more reports included in the |
+    |                       | batch interval.                         |
+    +-----------------------+-----------------------------------------+
+    | batchMismatch         | Aggregators disagree on the report      |
+    |                       | shares that were aggregated in a batch. |
+    +-----------------------+-----------------------------------------+
+    | unauthorizedRequest   | Authentication of an HTTP request       |
+    |                       | failed (see Section 3.2).               |
+    +-----------------------+-----------------------------------------+
 
                                   Table 1
 
@@ -458,9 +471,10 @@ Table of Contents
    Section 7.3).  Clients SHOULD display the "detail" field of all
    errors.  The "instance" value MUST be the endpoint to which the
    request was targeted.  The problem document MUST also include a
-   "taskid" member which contains the associated PPM task ID, encoded
-   with base64 using the standard alphabet [RFC4648] (this value is
-   always known, see Section 4.1).
+   "taskid" member which contains the associated PPM task ID (this value
+   is always known, see Section 4.1), encoded in Base 64 using the URL
+   and filename safe alphabet with no padding defined in sections 5 and
+   3.2 of [RFC4648].
 
    In the remainder of this document, we use the tokens in the table
    above to refer to error types, rather than the full URNs.  For
@@ -490,7 +504,8 @@ Table of Contents
    To authenticate the request, the receiver looks up the token for the
    sender as determined by the task configuration.  (See Section 4.1.)
    If the value of the "DAP-Auth-Token" header does not match the token,
-   then the receiver MUST abort with error "unauthorizedRequest".
+   then the receiver MUST abort with error "unauthorizedRequest".  The
+   error code of the HTTP response MUST be 403.
 
    [OPEN ISSUE: This simple bearer-token scheme is meant to unblock
    interop testing.  Eventually it should be replaced with a more secure
@@ -611,14 +626,24 @@ struct {
    Clients periodically upload reports to the leader, which then
    distributes the individual shares to each helper.
 
-4.2.1.  Key Configuration Request
+4.2.1.  HPKE Configuration Request
 
    Before the client can upload its report to the leader, it must know
    the public key of each of the aggregators.  These are retrieved from
-   each aggregator by sending a request to [aggregator]/key_config,
-   where [aggregator] is the aggregator's endpoint URL, obtained from
-   the task parameters.  The aggregator responds to well-formed requests
-   with status 200 and an HpkeConfig value:
+   each aggregator by sending a request to
+   [aggregator]/hpke_config?task_id=[task-id], where [aggregator] is the
+   aggregator's endpoint URL, obtained from the task parameters, and
+   [task-id] is the task ID obtained from the task parameters, encoded
+   in Base 64 with URL and filename safe alphabet with no padding, as
+   specified in sections 5 and 3.2 of [RFC4648].  If the aggregator does
+   not recognize the task ID, then it responds with HTTP error status
+   404 Not Found and an error of type unrecognizedTask.  The aggregator
+   responds to well-formed requests with status 200 and an HpkeConfig
+   value:
+
+   [TODO: Allow aggregators to return HTTP 403 Forbidden in deployments
+   that use authentication to avoid leaking information about which
+   tasks exist.]
 
    struct {
      HpkeConfigId id;
@@ -629,23 +654,24 @@ struct {
    } HpkeConfig;
 
    opaque HpkePublicKey<1..2^16-1>;
-   uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
-   uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-   uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+   uint16 HpkeAeadId; // Defined in RFC9180
+   uint16 HpkeKemId;  // Defined in RFC9180
+   uint16 HpkeKdfId;  // Defined in RFC9180
 
    [OPEN ISSUE: Decide whether to expand the width of the id, or support
    multiple cipher suites (a la OHTTP/ECH).]
 
-   The client MUST abort if any of the following happen for any
-   key_config request:
+   The client MUST abort if any of the following happen for any HPKE
+   config request:
 
    *  the client and aggregator failed to establish a secure,
       aggregator-authenticated channel;
 
-   *  the GET request failed or didn't return a valid key config; or
+   *  the GET request failed or didn't return a valid HPKE
+      configuration; or
 
-   *  the key config specifies a KEM, KDF, or AEAD algorithm the client
-      doesn't recognize.
+   *  the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the
+      client doesn't recognize.
 
    Aggregators SHOULD use HTTP caching to permit client-side caching of
    this resource [RFC5861].  Aggregators SHOULD favor long cache
@@ -697,8 +723,8 @@ struct {
 
    To generate the report, the client begins by sharding its measurement
    into a sequence of input shares as specified by the VDAF in use.  To
-   encrypt an input share, the client first generates an HPKE
-   [I-D.irtf-cfrg-hpke] context for the aggregator by running
+   encrypt an input share, the client first generates an HPKE [RFC9180]
+   context for the aggregator by running
 
  enc, context = SetupBaseS(pk, Report.task_id || "ppm-00 input share" ||
                                0x01 || server_role)
@@ -739,7 +765,14 @@ struct {
    comparing the aggregate result to the previous aggregate result may
    result in a privacy violation.  (Note that the helpers enforce this
    as well; see Section 4.4.)  In addition, the leader SHOULD abort the
-   upload protocol and alert the client with error "staleReport".
+   upload protocol and alert the client with error "reportTooLate".
+
+   The leader MUST buffer reports while waiting to aggregate them.  The
+   leader SHOULD NOT accept reports whose timestamps are too far in the
+   future.  Implementors MAY provide for some small leeway, usually no
+   more than a few minutes, to account for clock skew.  If the leader
+   rejects a report for this reason, it SHOULD abort the upload protocol
+   and alert the client with error "reportTooEarly".
 
 4.2.3.  Upload Extensions
 
@@ -764,25 +797,26 @@ struct {
    "extension_type" indicates the type of extension, and
    "extension_data" contains information specific to the extension.
 
-4.2.4.  Leader State
-
-   The leader MUST buffer reports while waiting to aggregate them.  The
-   leader SHOULD NOT accept reports whose timestamps are too far in the
-   future.  Implementors MAY provide for some small leeway, usually no
-   more than a few minutes, to account for clock skew.
-
 4.3.  Verifying and Aggregating Reports
 
    Once a set of clients have uploaded their reports to the leader, the
    leader can send them to the helpers to be verified and aggregated.
    In order to enable the system to handle very large batches of
-   reports, this process can be performed incrementally.  To aggregate a
-   set of reports, the leader sends a message to each helper containing
-   those report shares.  The helper then processes them (verifying the
-   proofs and incorporating their values into the ongoing aggregate) and
-   replies to the leader.
+   reports, this process can be performed incrementally.  Verification
+   of a set of reports is referred to as an aggregation job.  Each
+   aggregation job is associated with exactly one PPM task, and a PPM
+   task can have many aggregation jobs.  Each job is associated with an
+   ID that is unique within the context of a PPM task in order to
+   distinguish different jobs from one another.  Each aggregator uses
+   this ID as an index into per-job storage, e.g., to keep track of
+   report shares that belong to a given aggregation job.
 
-   The exact structure of the aggregation flow depends on the VDAF.
+   To run an aggregation job, the leader sends a message to each helper
+   containing the report shares in the job.  The helper then processes
+   them (verifying the proofs and incorporating their values into the
+   ongoing aggregate) and replies to the leader.
+
+   The exact structure of the aggregation job flow depends on the VDAF.
    Specifically:
 
    *  Some VDAFs (e.g., prio3) allow the leader to start aggregating
@@ -809,16 +843,16 @@ struct {
 
    Leader                                                 Helper
 
-   Aggregate request (Reports 1-10) ------------------------>  \
-   <----------------------------- Aggregate response (State 1) | Reports
-   Aggregate request (continued, State 1) ------------------>  | 1-10
-   <----------------------------- Aggregate response (State 1) /
+   Aggregate request (Reports 1-10, Job = N) --------------->  \
+   <----------------------------- Aggregate response (Job = N) | Reports
+   Aggregate request (continued, Job = N) ------------------>  | 1-10
+   <----------------------------- Aggregate response (Job = N) /
 
 
-   Aggregate request (Reports 11-20, State 1) -------------->  \
-   <----------------------------- Aggregate response (State 1) | Reports
-   Aggregate request (continued, State 2) ------------------>  | 11-20
-   <----------------------------- Aggregate response (State 2) /
+   Aggregate request (Reports 11-20, Job = M) -------------->  \
+   <----------------------------- Aggregate response (Job = M) | Reports
+   Aggregate request (continued, Job = M) ------------------>  | 11-20
+   <----------------------------- Aggregate response (Job = M) /
 
      Figure 2: Aggregation Flow (batch size=20).  Multiple aggregation
                   flows can be executed at the same time.
@@ -845,13 +879,17 @@ struct {
 
 4.3.1.  Aggregate Initialization
 
-   The leader begins aggregation by choosing a set of candidate reports
-   that pertain to the same PPM task.  The leader can run this process
-   for many candidate reports in parallel as needed.  After choosing the
-   set of candidates, the leader begins aggregation by splitting each
-   report into "report shares", one for each aggregator.  The leader and
-   helpers then run the aggregate initialization flow to accomplish two
-   tasks:
+   The leader begins an aggregation job by choosing a set of candidate
+   reports that pertain to the same PPM task and a unique job ID.  The
+   job ID is a 32-byte value, structured as follows:
+
+   opaque AggregationJobID[32];
+
+   The leader can run this process for many candidate reports in
+   parallel as needed.  After choosing the set of candidates, the leader
+   begins aggregation by splitting each report into "report shares", one
+   for each aggregator.  The leader and helpers then run the aggregate
+   initialization flow to accomplish two tasks:
 
    1.  Recover and determine which input report shares are invalid.
 
@@ -876,13 +914,18 @@ struct {
    The leader begins the aggregate initialization phase with the set of
    candidate report shares as follows:
 
-   1.  Decrypt the input share for each report share as described in
+   1.  Generate a fresh AggregationJobID.  This ID MUST be unique within
+       the context of the corresponding PPM task.  It is RECOMMENDED
+       that this be set to a random string output by a cryptographically
+       secure pseudorandom number generator.
+
+   2.  Decrypt the input share for each report share as described in
        Section 4.3.1.3.
 
-   2.  Check that the resulting input share is valid as described in
+   3.  Check that the resulting input share is valid as described in
        Section 4.3.1.4.
 
-   3.  Initialize VDAF preparation as described in Section 4.3.1.5.
+   4.  Initialize VDAF preparation as described in Section 4.3.1.5.
 
    If any step yields an invalid report share, the leader removes the
    report share from the set of candidate reports.  Once the leader has
@@ -899,8 +942,8 @@ struct {
 
    struct {
      TaskID task_id;
+     AggregationJobID job_id;
      opaque agg_param<0..2^16-1>;
-     opaque helper_state<0..2^16>;
      ReportShare report_shares<1..2^16-1>;
    } AggregateInitReq;
 
@@ -915,9 +958,8 @@ struct {
    equal to the index of the aggregator in the task's
    aggregator_endpoints to which the AggregateInitReq is being sent.
    The agg_param field is an opaque, VDAF-specific aggregation
-   parameter.  The helper_state parameter contains the helper's state.
-   This is an optional parameter of an aggregate request that the helper
-   can use to carry state across requests and across aggregate flows.
+   parameter.  The job_id parameter contains the leader's chosen
+   AggregationJobID.
 
    Let [aggregator] denote the helper's API endpoint.  The leader sends
    a POST request to [aggregator]/aggregate with its AggregateInitReq
@@ -975,21 +1017,13 @@ struct {
 } PrepareStep;
 
 struct {
-  opaque helper_state<0..2^16>;
+  AggregationJobID job_id;
   PrepareStep prepare_steps<1..2^16-1>;
 } AggregateInitResp;
 
-   The helper_state parameter contains the helper's initial state.  This
-   is an optional parameter of an aggregate request that the helper can
-   use to carry state across requests.  At least part of the state will
-   usually need to be encrypted in order to protect user privacy.
-   However, the details of precisely how the state is encrypted and the
-   information that it carries is up to the helper implementation.
-
-   [[OPEN ISSUE: we may end up removing helper_state.  See #185]]
-
-   The rest of the message is a sequence of PrepareStep values, the
-   order of which matches that of the ReportShare values in
+   The job_id parameter is equal to AggregateInitReq.job_id.  The rest
+   of the message is a sequence of PrepareStep values, the order of
+   which matches that of the ReportShare values in
    AggregateInitReq.report_shares.  Each report that was marked as
    invalid is assigned the PrepareStepResult failed.  Otherwise, the
    PrepareStep is either marked as continued with the output prep_msg,
@@ -1131,7 +1165,7 @@ out = VDAF.prep_next(prep_state, inbound)
    AggregateContinueReq message, structured as follows:
 
    struct {
-     opaque helper_state<0..2^16>;
+     AggregationJobID job_id;
      PrepareStep prepare_shares<1..2^16-1>;
    } AggregateContinueReq;
 
@@ -1190,7 +1224,7 @@ out = VDAF.prep_next(prep_state, inbound)
    AggregateContinueResp message, structured as follows:
 
    struct {
-     opaque helper_state<0..2^16>;
+     AggregationJobID job_id;
      PrepareStep prepare_shares<1..2^16-1>;
    } AggregateContinueResp;
 
@@ -1327,7 +1361,7 @@ out = VDAF.prep_next(prep_state, inbound)
      Interval batch_interval;
      uint64 report_count;
      opaque checksum[32];
-     opaque helper_state<0..2^16>;
+     AggregationJobID job_id;
    } AggregateShareReq;
 
    *  task_id is the task ID associated with the PPM parameters.
@@ -1338,14 +1372,12 @@ out = VDAF.prep_next(prep_state, inbound)
 
    *  checksum is the checksum computed over the set of client reports.
 
-   *  helper_state is the helper's state, which is carried across
-      requests from the leader.
+   *  job_id is the ID of the aggregation job.
 
    This request MUST be authenticated as described in Section 3.2.  To
    handle the leader's request, the helper first ensures that the
    request meets the requirements for batch parameters following the
-   procedure in Section 4.4.5.  If the batch parameters are invalid,
-   then it MUST abort with error "batchInvalid".
+   procedure in Section 4.4.5.
 
    Next, it computes a checksum based on its view of the output shares
    included in the batch window, and checks that the report_count and
@@ -1451,22 +1483,22 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    Namely, it checks that both batch_interval.start and
    batch_interval.duration are divisible by min_batch_duration and that
    batch_interval.duration >= min_batch_duration.  Unless both these
-   conditions are true, it aborts and alerts the peer with "invalid
-   batch interval".
+   conditions are true, the aggregator MUST abort and alert its peer
+   with error "batchInvalid".
 
    Next, the aggregator checks that the request respects the generic
    privacy parameters of the PPM task.  Let X denote the set of reports
    for which the aggregator has recovered a valid output share and which
    fall in the batch interval of the request.
 
-   *  If len(X) < min_batch_size, then the aggregator aborts and alerts
-      the peer with "insufficient batch size".
+   *  If len(X) < min_batch_size, then the aggregator MUST abort and
+      alert its peer with "insufficientBatchSize".
 
    *  The aggregator keeps track of the number of times each report was
       added to the batch of an AggregateShareReq.  If any report in X
       was added to at least max_batch_lifetime previous batches, then
-      the helper aborts and alerts the peer with "request exceeds the
-      batch's privacy budget".
+      the aggregator MUST abort and alert the peer with
+      "batchLifetimeExceeded".
 
 4.4.6.  Anti-replay
 
@@ -2037,7 +2069,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    This specification defines the following protocol messages, along
    with their corresponding media types types:
 
-   *  HpkeConfig Section 4.1: "application/ppm-hpke-config"
+   *  HpkeConfig Section 4.2.1: "application/ppm-hpke-config"
 
    *  Report Section 4.2.2: "message/ppm-report"
 
@@ -2516,13 +2548,6 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
 9.1.  Normative References
 
-   [I-D.irtf-cfrg-hpke]
-              Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
-              "Hybrid Public Key Encryption", Work in Progress,
-              Internet-Draft, draft-irtf-cfrg-hpke-12, 2 September 2021,
-              <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
-              hpke-12>.
-
    [I-D.thomson-http-oblivious]
               Thomson, M. and C. A. Wood, "Oblivious HTTP", Work in
               Progress, Internet-Draft, draft-thomson-http-oblivious-02,
@@ -2567,6 +2592,10 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/rfc/rfc8446>.
+
+   [RFC9180]  Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
+              Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
+              February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
 
 9.2.  Informative References
 
