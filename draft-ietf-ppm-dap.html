@@ -1187,9 +1187,6 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.3">
                     <p id="section-toc.1-1.4.2.2.2.3.1"><a href="#section-4.2.3" class="xref">4.2.3</a>.  <a href="#name-upload-extensions" class="xref">Upload Extensions</a></p>
 </li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.4">
-                    <p id="section-toc.1-1.4.2.2.2.4.1"><a href="#section-4.2.4" class="xref">4.2.4</a>.  <a href="#name-leader-state" class="xref">Leader State</a></p>
-</li>
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
@@ -1765,8 +1762,24 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
               <td class="text-left" rowspan="1" colspan="1">The message was generated using an outdated configuration.</td>
             </tr>
             <tr>
+              <td class="text-left" rowspan="1" colspan="1">reportTooLate</td>
+              <td class="text-left" rowspan="1" colspan="1">Report could not be processed because it arrived too late.</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">reportTooEarly</td>
+              <td class="text-left" rowspan="1" colspan="1">Report could not be processed because its timestamp is too far in the future.</td>
+            </tr>
+            <tr>
               <td class="text-left" rowspan="1" colspan="1">batchInvalid</td>
               <td class="text-left" rowspan="1" colspan="1">A collect or aggregate-share request was made with invalid batch parameters.</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">insufficientBatchSize</td>
+              <td class="text-left" rowspan="1" colspan="1">There are not enough reports in the batch interval to satisfy the task's minimum batch size.</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">batchLifetimeExceeded</td>
+              <td class="text-left" rowspan="1" colspan="1">The batch lifetime has been exceeded for one or more reports included in the batch interval.</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">batchMismatch</td>
@@ -1779,9 +1792,10 @@ than those defined above. Servers <span class="bcp14">MUST NOT</span> use the PP
 not listed in the appropriate IANA registry (see <a href="#ppm-urn-space" class="xref">Section 7.3</a>). Clients
 <span class="bcp14">SHOULD</span> display the "detail" field of all errors. The "instance" value <span class="bcp14">MUST</span> be
 the endpoint to which the request was targeted. The problem document <span class="bcp14">MUST</span> also
-include a "taskid" member which contains the associated PPM task ID, encoded
-with base64 using the standard alphabet <span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span> (this value is always
-known, see <a href="#task-configuration" class="xref">Section 4.1</a>).<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+include a "taskid" member which contains the associated PPM task ID (this value
+is always known, see <a href="#task-configuration" class="xref">Section 4.1</a>), encoded in Base 64 using the URL
+and filename safe alphabet with no padding defined in sections 5 and 3.2 of
+<span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span>.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
 <p id="section-3.1-5">In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
@@ -2058,7 +2072,13 @@ collector. (See <a href="#collect-flow" class="xref">Section 4.4</a>.) Otherwise
 the previous aggregate result may result in a privacy violation. (Note that the
 helpers enforce this as well; see <a href="#collect-flow" class="xref">Section 4.4</a>.) In addition, the
 leader <span class="bcp14">SHOULD</span> abort the upload protocol and alert the client with error
-"staleReport".<a href="#section-4.2.2-13" class="pilcrow">¶</a></p>
+"reportTooLate".<a href="#section-4.2.2-13" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-14">The leader <span class="bcp14">MUST</span> buffer reports while waiting to aggregate them. The
+leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too far in the future.
+Implementors <span class="bcp14">MAY</span> provide for some small leeway, usually no more than a few
+minutes, to account for clock skew. If the leader rejects a report for this
+reason, it <span class="bcp14">SHOULD</span> abort the upload protocol and alert the client with error
+"reportTooEarly".<a href="#section-4.2.2-14" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="upload-extensions">
@@ -2087,17 +2107,6 @@ encoded value of the following form:<a href="#section-4.2.3-1" class="pilcrow">�
 </div>
 <p id="section-4.2.3-3">"extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.<a href="#section-4.2.3-3" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="leader-state">
-<section id="section-4.2.4">
-          <h4 id="name-leader-state">
-<a href="#section-4.2.4" class="section-number selfRef">4.2.4. </a><a href="#name-leader-state" class="section-name selfRef">Leader State</a>
-          </h4>
-<p id="section-4.2.4-1">The leader <span class="bcp14">MUST</span> buffer reports while waiting to aggregate them. The
-leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too far in the future.
-Implementors <span class="bcp14">MAY</span> provide for some small leeway, usually no more than a few
-minutes, to account for clock skew.<a href="#section-4.2.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2686,8 +2695,7 @@ struct {
           </ul>
 <p id="section-4.4.2-5">To handle the leader's request, the helper first ensures that the request meets
 the requirements for batch parameters following the procedure in
-<a href="#batch-parameter-validation" class="xref">Section 4.4.5</a>. If the batch parameters are invalid, then it
-<span class="bcp14">MUST</span> abort with error "batchInvalid".<a href="#section-4.4.2-5" class="pilcrow">¶</a></p>
+<a href="#batch-parameter-validation" class="xref">Section 4.4.5</a>.<a href="#section-4.4.2-5" class="pilcrow">¶</a></p>
 <p id="section-4.4.2-6">Next, it computes a checksum based on its view of the output shares included in
 the batch window, and checks that the <code>report_count</code> and <code>checksum</code> included in
 the request match its computed values. If not, then it <span class="bcp14">MUST</span> abort with error
@@ -2800,20 +2808,20 @@ with the PPM task. It does so as described here.<a href="#section-4.4.5-1" class
 boundaries defined by the PPM task's parameters. Namely, it checks that both
 <code>batch_interval.start</code> and <code>batch_interval.duration</code> are divisible by
 <code>min_batch_duration</code> and that <code>batch_interval.duration &gt;= min_batch_duration</code>.
-Unless both these conditions are true, it aborts and alerts the peer with
-"invalid batch interval".<a href="#section-4.4.5-2" class="pilcrow">¶</a></p>
+Unless both these conditions are true, the aggregator <span class="bcp14">MUST</span> abort and alert its
+peer with error "batchInvalid".<a href="#section-4.4.5-2" class="pilcrow">¶</a></p>
 <p id="section-4.4.5-3">Next, the aggregator checks that the request respects the generic privacy
 parameters of the PPM task. Let <code>X</code> denote the set of reports for which the
 aggregator has recovered a valid output share and which fall in the batch
 interval of the request.<a href="#section-4.4.5-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.4.5-4.1">If <code>len(X) &lt; min_batch_size</code>, then the aggregator aborts and alerts the peer
-with "insufficient batch size".<a href="#section-4.4.5-4.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.4.5-4.1">If <code>len(X) &lt; min_batch_size</code>, then the aggregator <span class="bcp14">MUST</span> abort and alert its
+peer with "insufficientBatchSize".<a href="#section-4.4.5-4.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.4.5-4.2">The aggregator keeps track of the number of times each report was added to the
 batch of an AggregateShareReq. If any report in <code>X</code> was added to at least
-<code>max_batch_lifetime</code> previous batches, then the helper aborts and alerts the
-peer with "request exceeds the batch's privacy budget".<a href="#section-4.4.5-4.2" class="pilcrow">¶</a>
+<code>max_batch_lifetime</code> previous batches, then the aggregator <span class="bcp14">MUST</span> abort and
+alert the peer with "batchLifetimeExceeded".<a href="#section-4.4.5-4.2" class="pilcrow">¶</a>
 </li>
           </ul>
 </section>
