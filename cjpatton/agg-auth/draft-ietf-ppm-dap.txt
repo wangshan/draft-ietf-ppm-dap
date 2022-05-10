@@ -482,7 +482,7 @@ Table of Contents
    string that MUST be generated using a cryptographically secure random
    number generator.
 
-   For requests requiring authentication, the sender includes a "PPM-
+   For requests requiring authentication, the sender includes a "DAP-
    Auth-Token" header in its HTTP request whose value is the bearer
    token encoded in Base64 and using the URL-safe alphabet defined in
    [RFC4648].

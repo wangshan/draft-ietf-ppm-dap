@@ -1808,7 +1808,7 @@ request. It does so as described here.<a href="#section-3.2-1" class="pilcrow">�
 <p id="section-3.2-2">Prior to the start of the protocol, the sender and receiver arrange to share a
 bearer token. The bearer token is an opaque, 32-byte string that <span class="bcp14">MUST</span> be
 generated using a cryptographically secure random number generator.<a href="#section-3.2-2" class="pilcrow">¶</a></p>
-<p id="section-3.2-3">For requests requiring authentication, the sender includes a "PPM-Auth-Token"
+<p id="section-3.2-3">For requests requiring authentication, the sender includes a "DAP-Auth-Token"
 header in its HTTP request whose value is the bearer token encoded in Base64 and
 using the URL-safe alphabet defined in <span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span>.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
 <p id="section-3.2-4">To authenticate the request, the receiver looks up the bearer token for the
