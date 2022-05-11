@@ -1331,7 +1331,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                     <p id="section-toc.1-1.7.2.1.2.3.1"><a href="#section-7.1.3" class="xref">7.1.3</a>.  <a href="#name-message-ppm-aggregate-conti" class="xref">"message/ppm-aggregate-continue-req" media type</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1.2.4">
-                    <p id="section-toc.1-1.7.2.1.2.4.1"><a href="#section-7.1.4" class="xref">7.1.4</a>.  <a href="#name-message-ppm-aggregate-init-" class="xref">"message/ppm-aggregate-init-resp" media type</a></p>
+                    <p id="section-toc.1-1.7.2.1.2.4.1"><a href="#section-7.1.4" class="xref">7.1.4</a>.  <a href="#name-message-ppm-aggregate-initi" class="xref">"message/ppm-aggregate-initialize-resp" media type</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1.2.5">
                     <p id="section-toc.1-1.7.2.1.2.5.1"><a href="#section-7.1.5" class="xref">7.1.5</a>.  <a href="#name-message-ppm-aggregate-contin" class="xref">"message/ppm-aggregate-continue-req" media type</a></p>
@@ -1357,7 +1357,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="xref">7.2</a>.  <a href="#name-upload-extension-registry" class="xref">Upload Extension Registry</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="xref">7.3</a>.  <a href="#name-urn-sub-namespace-for-ppm-u" class="xref">URN Sub-namespace for PPM (urn:ietf:params:ppm)</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="xref">7.3</a>.  <a href="#name-urn-sub-namespace-for-dap-u" class="xref">URN Sub-namespace for DAP (urn:ietf:params:ppm)</a></p>
 </li>
             </ul>
 </li>
@@ -1473,7 +1473,7 @@ appear in all capitals, as shown here.<a href="#section-1.2-1" class="pilcrow">�
           <dd class="break"></dd>
 <dt id="section-1.2-3.21">Minimum batch duration:</dt>
           <dd style="margin-left: 1.5em" id="section-1.2-3.22">
-            <p id="section-1.2-3.22.1">The minimum batch duration permitted for a PPM task, i.e., the minimum time
+            <p id="section-1.2-3.22.1">The minimum batch duration permitted for a DAP task, i.e., the minimum time
  difference between the oldest and newest report in a batch.<a href="#section-1.2-3.22.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
@@ -1525,7 +1525,7 @@ client's input.<a href="#section-1.2-3.34.1" class="pilcrow">¶</a></p>
         <dd class="break"></dd>
 </dl>
 <p id="section-1.2-4">This document uses the presentation language of <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span> to define messages
-in the PPM protocol. Encoding and decoding of these messages as byte strings
+in the DAP protocol. Encoding and decoding of these messages as byte strings
 also follows <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -1539,24 +1539,22 @@ also follows <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>.<a href=
 <p id="section-2-1">The protocol is executed by a large set of clients and a small set of servers.
 We call the servers the <em>aggregators</em>. Each client's input to the protocol is a
 set of measurements (e.g., counts of some user behavior). Given the input set of
-measurements <code>x_1, ..., x_n</code> held by <code>n</code> users, the goal of a <em>privacy
-preserving measurement (PPM) protocol</em> is to compute <code>y = F(p, x_1, ..., x_n)</code>
-for some function <code>F</code> while revealing nothing else about the measurements.<a href="#section-2-1" class="pilcrow">¶</a></p>
+measurements <code>x_1, ..., x_n</code> held by <code>n</code> users, the goal of a protocol for
+privacy preserving measurement is to compute <code>y = F(p, x_1, ..., x_n)</code> for some
+function <code>F</code> while revealing nothing else about the measurements.<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-2-2">This protocol is extensible and allows for the addition of new cryptographic
 schemes that implement the VDAF interface specified in
 <span>[<a href="#VDAF" class="xref">VDAF</a>]</span>. Candidates include:<a href="#section-2-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2-3.1">
-          <code>prio3</code>, which allows for aggregate statistics such as sum, mean, histograms,
+<li class="normal" id="section-2-3.1">Prio3, which allows for aggregate statistics such as sum, mean, histograms,
 etc. This class of VDAFs is based on Prio <span>[<a href="#CGB17" class="xref">CGB17</a>]</span> and includes improvements
 described in <span>[<a href="#BBCGGI19" class="xref">BBCGGI19</a>]</span>.<a href="#section-2-3.1" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-2-3.2">
-          <code>poplar1</code>, which allows for finding the most popular strings among a
-collection of clients (e.g., the URL of their home page) as well as counting
-the number of clients that hold a given string. This VDAF is the basis of the
-Poplar protocol of <span>[<a href="#BBCGGI21" class="xref">BBCGGI21</a>]</span>, which is designed to solve the heavy hitters
-problem in a privacy preserving manner.<a href="#section-2-3.2" class="pilcrow">¶</a>
+        <li class="normal" id="section-2-3.2">Poplar1, which allows for finding the most popular strings among a collection
+of clients (e.g., the URL of their home page) as well as counting the number
+of clients that hold a given string. This VDAF is the basis of the Poplar
+protocol of <span>[<a href="#BBCGGI21" class="xref">BBCGGI21</a>]</span>, which is designed to solve the heavy hitters problem
+in a privacy preserving manner.<a href="#section-2-3.2" class="pilcrow">¶</a>
 </li>
       </ul>
 <p id="section-2-4">This protocol is designed to work with schemes that use secret sharing. Rather
@@ -1621,7 +1619,7 @@ https://github.com/ietf-wg-ppm/ppm-specification/issues/117]]<a href="#section-2
 <dt id="section-2.1-5.3">Client(s):</dt>
           <dd style="margin-left: 1.5em" id="section-2.1-5.4">
             <p id="section-2.1-5.4.1">The endpoints which directly take the measurement(s) and report them to the
- PPM system. In order to provide reasonable levels of privacy, there must be
+ DAP protocol. In order to provide reasonable levels of privacy, there must be
  a large number of clients.<a href="#section-2.1-5.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
@@ -1648,7 +1646,7 @@ https://github.com/ietf-wg-ppm/ppm-specification/issues/117]]<a href="#section-2
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-2.1-6">The basic unit of PPM is the "task" which represents a single measurement
+<p id="section-2.1-6">The basic unit of DAP is the "task" which represents a single measurement
 (though potentially taken over multiple time windows). The definition of a task
 includes the following parameters:<a href="#section-2.1-6" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1689,7 +1687,7 @@ until the entire batch of reports is received.<a href="#section-2.1-10" class="p
 <a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-validating-inputs" class="section-name selfRef">Validating Inputs</a>
         </h3>
 <p id="section-2.2-1">An essential task of any data collection pipeline is ensuring that the data
-being aggregated is "valid". In PPM, input validation is complicated by the fact
+being aggregated is "valid". In DAP, input validation is complicated by the fact
 that none of the entities other than the client ever sees the values for
 individual clients.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
 <p id="section-2.2-2">In order to address this problem, the aggregators engage in a secure,
@@ -1701,7 +1699,7 @@ in posession of either an "output share" that is ready to be aggregated or an
 indication that a valid output share could not be computed.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
 <p id="section-2.2-3">To facilitiate this computation, the input shares generated by the client
 include information used by the aggregators during aggregation in order to
-validate their corresponding output shares. For example, <code>prio3</code> includes a
+validate their corresponding output shares. For example, Prio3 includes a
 distributed zero-knowledge proof of the input's validity <span>[<a href="#BBCGGI19" class="xref">BBCGGI19</a>]</span> which the
 aggregators can jointly verify and reject the report if it cannot be verified.
 However, they do not learn anything about the individual report other than that
@@ -1714,7 +1712,7 @@ report which of a set of N options the user select, the report might contain N
 integers and the proof would demonstrate that N-1 were 0 and the other was 1.<a href="#section-2.2-4" class="pilcrow">¶</a></p>
 <p id="section-2.2-5">It is important to recognize that "validity" is distinct from "correctness". For
 instance, the user might have spent 30s on a task but the client might report
-60s. This is a problem with any measurement system and PPM does not attempt to
+60s. This is a problem with any measurement system and DAP does not attempt to
 address it; it merely ensures that the data is within acceptable limits, so the
 client could not report 10^6s or -20s.<a href="#section-2.2-5" class="pilcrow">¶</a></p>
 </section>
@@ -1726,7 +1724,7 @@ client could not report 10^6s or -20s.<a href="#section-2.2-5" class="pilcrow">�
       <h2 id="name-message-transport">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-message-transport" class="section-name selfRef">Message Transport</a>
       </h2>
-<p id="section-3-1">Communications between PPM entities are carried over HTTPS <span>[<a href="#RFC2818" class="xref">RFC2818</a>]</span>. HTTPS
+<p id="section-3-1">Communications between DAP entities are carried over HTTPS <span>[<a href="#RFC2818" class="xref">RFC2818</a>]</span>. HTTPS
 provides server authentication and confidentiality. When client authenticaiton
 is also required, the client uses the mechanism described in
 <a href="#https-sender-auth" class="xref">Section 3.2</a>.<a href="#section-3-1" class="pilcrow">¶</a></p>
@@ -1735,15 +1733,15 @@ is also required, the client uses the mechanism described in
         <h3 id="name-errors">
 <a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-errors" class="section-name selfRef">Errors</a>
         </h3>
-<p id="section-3.1-1">Errors can be reported in PPM both at the HTTP layer and within challenge
-objects as defined in <a href="#iana-considerations" class="xref">Section 7</a>. PPM servers can return responses
+<p id="section-3.1-1">Errors can be reported in DAP both at the HTTP layer and within challenge
+objects as defined in <a href="#iana-considerations" class="xref">Section 7</a>. DAP servers can return responses
 with an HTTP error response code (4XX or 5XX). For example, if the client
 submits a request using a method not allowed in this document, then the server
 <span class="bcp14">MAY</span> return status code 405 (Method Not Allowed).<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <p id="section-3.1-2">When the server responds with an error status, it <span class="bcp14">SHOULD</span> provide additional
 information using a problem document <span>[<a href="#RFC7807" class="xref">RFC7807</a>]</span>. To facilitate automatic
 response to errors, this document defines the following standard tokens for use
-in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+in the "type" field (within the DAP URN namespace "urn:ietf:params:ppm:error:"):<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1796,11 +1794,11 @@ in the "type" field (within the PPM URN namespace "urn:ietf:params:ppm:error:"):
           </tbody>
         </table>
 <p id="section-3.1-4">This list is not exhaustive. The server <span class="bcp14">MAY</span> return errors set to a URI other
-than those defined above. Servers <span class="bcp14">MUST NOT</span> use the PPM URN namespace for errors
-not listed in the appropriate IANA registry (see <a href="#ppm-urn-space" class="xref">Section 7.3</a>). Clients
+than those defined above. Servers <span class="bcp14">MUST NOT</span> use the DAP URN namespace for errors
+not listed in the appropriate IANA registry (see <a href="#urn-space" class="xref">Section 7.3</a>). Clients
 <span class="bcp14">SHOULD</span> display the "detail" field of all errors. The "instance" value <span class="bcp14">MUST</span> be
 the endpoint to which the request was targeted. The problem document <span class="bcp14">MUST</span> also
-include a "taskid" member which contains the associated PPM task ID (this value
+include a "taskid" member which contains the associated DAP task ID (this value
 is always known, see <a href="#task-configuration" class="xref">Section 4.1</a>), encoded in Base 64 using the URL
 and filename safe alphabet with no padding defined in sections 5 and 3.2 of
 <span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span>.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
@@ -1817,7 +1815,7 @@ describe how protocol participants react to various error conditions.<a href="#s
         <h3 id="name-https-sender-authentication">
 <a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-https-sender-authentication" class="section-name selfRef">HTTPS Sender Authentication</a>
         </h3>
-<p id="section-3.2-1">Some HTTP requests in the PPM protocol require the sender to authenticate its
+<p id="section-3.2-1">Some HTTP requests in the DAP protocol require the sender to authenticate its
 request. It does so as described here.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <p id="section-3.2-2">Prior to the start of the protocol, the sender and receiver arrange to share a
 secret sender-specific API token, which <span class="bcp14">MUST</span> be suitable for representation in
@@ -1843,7 +1841,7 @@ details.]<a href="#section-3.2-5" class="pilcrow">¶</a></p>
       <h2 id="name-protocol-definition">
 <a href="#section-4" class="section-number selfRef">4. </a><a href="#name-protocol-definition" class="section-name selfRef">Protocol Definition</a>
       </h2>
-<p id="section-4-1">PPM has three major interactions which need to be defined:<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-1">DAP has three major interactions which need to be defined:<a href="#section-4-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4-2.1">Uploading reports from the client to the aggregators, specified in <a href="#upload-flow" class="xref">Section 4.2</a><a href="#section-4-2.1" class="pilcrow">¶</a>
 </li>
@@ -1869,7 +1867,7 @@ struct {
   Duration duration;
 } Interval;
 
-/* A nonce used to uniquely identify a report in the context of a PPM task. It
+/* A nonce used to uniquely identify a report in the context of a DAP task. It
 includes the time at which the report was generated and a random, 64-bit
 integer. */
 struct {
@@ -1877,7 +1875,7 @@ struct {
   uint64 rand;
 } Nonce;
 
-/* The various roles in the PPM protocol. */
+/* The various roles in the DAP protocol. */
 enum {
   collector(0),
   client(1),
@@ -1946,7 +1944,7 @@ of the aggregators is configured with following parameters:<a href="#section-4.1
           <li class="normal" id="section-4.1-6.2">
             <code>vdaf_verify_param</code>: The aggregator's VDAF verification parameter output by
 the setup algorithm computed jointly by the aggregators before the start of the
-PPM protocol <span>[<a href="#VDAF" class="xref">VDAF</a>]</span>). [OPEN ISSUE: This is yet to be
+DAP protocol <span>[<a href="#VDAF" class="xref">VDAF</a>]</span>). [OPEN ISSUE: This is yet to be
 specified. See issue#161.]<a href="#section-4.1-6.2" class="pilcrow">¶</a>
 </li>
         </ul>
@@ -2156,9 +2154,9 @@ information specific to the extension.<a href="#section-4.2.3-3" class="pilcrow"
 send them to the helpers to be verified and aggregated. In order to enable the
 system to handle very large batches of reports, this process can be performed
 incrementally. Verification of a set of reports is referred to as an aggregation
-job. Each aggregation job is associated with exactly one PPM task, and a PPM
+job. Each aggregation job is associated with exactly one DAP task, and a DAP
 task can have many aggregation jobs. Each job is associated with an ID that is
-unique within the context of a PPM task in order to distinguish different jobs
+unique within the context of a DAP task in order to distinguish different jobs
 from one another. Each aggregator uses this ID as an index into per-job storage,
 e.g., to keep track of report shares that belong to a given aggregation job.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.3-2">To run an aggregation job, the leader sends a message to each helper containing
@@ -2166,9 +2164,9 @@ the report shares in the job. The helper then processes them (verifying the proo
 and incorporating their values into the ongoing aggregate) and replies to the leader.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
 <p id="section-4.3-3">The exact structure of the aggregation job flow depends on the VDAF. Specifically:<a href="#section-4.3-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.3-4.1">Some VDAFs (e.g., <code>prio3</code>) allow the leader to start aggregating reports
+<li class="normal" id="section-4.3-4.1">Some VDAFs (e.g., Prio3) allow the leader to start aggregating reports
 proactively before all the reports in a batch are received. Others (e.g.,
-<code>poplar1</code>) require all the reports to be present and must be initiated by the
+Poplar1) require all the reports to be present and must be initiated by the
 collector.<a href="#section-4.3-4.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-4.3-4.2">Processing the reports -- especially validating them -- may require multiple
@@ -2230,7 +2228,7 @@ for each input report share in the batch.<a href="#section-4.3-11.3" class="pilc
 <a href="#section-4.3.1" class="section-number selfRef">4.3.1. </a><a href="#name-aggregate-initialization" class="section-name selfRef">Aggregate Initialization</a>
           </h4>
 <p id="section-4.3.1-1">The leader begins an aggregation job by choosing a set of candidate reports that pertain
-to the same PPM task and a unique job ID. The job ID is a 32-byte value, structured as follows:<a href="#section-4.3.1-1" class="pilcrow">¶</a></p>
+to the same DAP task and a unique job ID. The job ID is a 32-byte value, structured as follows:<a href="#section-4.3.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3.1-2">
 <pre>
 opaque AggregationJobID[32];
@@ -2269,7 +2267,7 @@ enum {
 shares as follows:<a href="#section-4.3.1.1-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.3.1.1-2">
 <li id="section-4.3.1.1-2.1">Generate a fresh AggregationJobID. This ID <span class="bcp14">MUST</span> be unique within the context of the
-corresponding PPM task. It is <span class="bcp14">RECOMMENDED</span> that this be set to a random string output
+corresponding DAP task. It is <span class="bcp14">RECOMMENDED</span> that this be set to a random string output
 by a cryptographically secure pseudorandom number generator.<a href="#section-4.3.1.1-2.1" class="pilcrow">¶</a>
 </li>
               <li id="section-4.3.1.1-2.2">Decrypt the input share for each report share as described in <a href="#input-share-decryption" class="xref">Section 4.3.1.3</a>.<a href="#section-4.3.1.1-2.2" class="pilcrow">¶</a>
@@ -2281,8 +2279,8 @@ by a cryptographically secure pseudorandom number generator.<a href="#section-4.
             </ol>
 <p id="section-4.3.1.1-3">If any step yields an invalid report share, the leader removes the report share from
 the set of candidate reports. Once the leader has initialized this state for all valid
-candidate report shares, it then creates an AggregateInitReq message for each helper to
-initialize the preparation of this candidate set. The AggregateInitReq message is
+candidate report shares, it then creates an AggregateInitializeReq message for each helper to
+initialize the preparation of this candidate set. The AggregateInitializeReq message is
 structured as follows:<a href="#section-4.3.1.1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3.1.1-4">
 <pre>
@@ -2297,19 +2295,19 @@ struct {
   AggregationJobID job_id;
   opaque agg_param&lt;0..2^16-1&gt;;
   ReportShare report_shares&lt;1..2^16-1&gt;;
-} AggregateInitReq;
+} AggregateInitializeReq;
 </pre><a href="#section-4.3.1.1-4" class="pilcrow">¶</a>
 </div>
 <p id="section-4.3.1.1-5">[[OPEN ISSUE: consider sending report shares separately (in parallel) to the aggregate instructions. RIght now, aggregation parameters and the corresponding report shares are sent at the same time, but this may not be strictly necessary. ]]<a href="#section-4.3.1.1-5" class="pilcrow">¶</a></p>
 <p id="section-4.3.1.1-6">The <code>nonce</code> and <code>extensions</code> fields of each ReportShare match that in the Report
 uploaded by the client. The <code>encrypted_input_share</code> field is the <code>HpkeCiphertext</code>
 whose index in <code>Report.encrypted_input_shares</code> is equal to the index of the aggregator
-in the task's <code>aggregator_endpoints</code> to which the AggregateInitReq is being sent.
+in the task's <code>aggregator_endpoints</code> to which the AggregateInitializeReq is being sent.
 The <code>agg_param</code> field is an opaque, VDAF-specific aggregation parameter. The
 <code>job_id</code> parameter contains the leader's chosen AggregationJobID.<a href="#section-4.3.1.1-6" class="pilcrow">¶</a></p>
 <p id="section-4.3.1.1-7">Let <code>[aggregator]</code> denote the helper's API endpoint. The leader sends a POST
-request to <code>[aggregator]/aggregate</code> with its AggregateInitReq message as
-the payload. The media type is "message/ppm-aggregate-init-req". In addition,
+request to <code>[aggregator]/aggregate</code> with its AggregateInitializeReq message as
+the payload. The media type is "message/ppm-aggregate-initialize-req". In addition,
 this request <span class="bcp14">MUST</span> be authenticated as described in <a href="#https-sender-auth" class="xref">Section 3.2</a>.<a href="#section-4.3.1.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -2319,14 +2317,14 @@ this request <span class="bcp14">MUST</span> be authenticated as described in <a
 <a href="#section-4.3.1.2" class="section-number selfRef">4.3.1.2. </a><a href="#name-helper-initialization" class="section-name selfRef">Helper Initialization</a>
             </h5>
 <p id="section-4.3.1.2-1">Each helper begins their portion of the aggregate initialization phase with the set
-of candidate report shares obtained in an <code>AggregateInitReq</code> message from the leader.
+of candidate report shares obtained in an <code>AggregateInitializeReq</code> message from the leader.
 It attempts to recover and validate the corresponding input shares similar to the leader,
 and eventually returns a response to the leader carrying a VDAF-specific message for each
 report share.<a href="#section-4.3.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.3.1.2-2">To begin this process, the helper first checks that the nonces in <code>AggregateInitReq.report_shares</code>
+<p id="section-4.3.1.2-2">To begin this process, the helper first checks that the nonces in <code>AggregateInitializeReq.report_shares</code>
 are all distinct. If two ReportShare values have the same nonce, then the helper <span class="bcp14">MUST</span> abort with
 error "unrecognizedMessage". If this check succeeds, the helper then attempts to recover each
-input share in <code>AggregateInitReq.report_shares</code> as follows:<a href="#section-4.3.1.2-2" class="pilcrow">¶</a></p>
+input share in <code>AggregateInitializeReq.report_shares</code> as follows:<a href="#section-4.3.1.2-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.3.1.2-3">
 <li id="section-4.3.1.2-3.1">Decrypt the input share for each report share as described in <a href="#input-share-decryption" class="xref">Section 4.3.1.3</a>.<a href="#section-4.3.1.2-3.1" class="pilcrow">¶</a>
 </li>
@@ -2336,8 +2334,8 @@ input share in <code>AggregateInitReq.report_shares</code> as follows:<a href="#
 </li>
             </ol>
 <p id="section-4.3.1.2-4">[[OPEN ISSUE: consider moving the helper nonce check into #input-share-batch-validation]]<a href="#section-4.3.1.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.3.1.2-5">Once the helper has processed each valid report share in <code>AggregateInitReq.report_shares</code>, the
-helper then creates an AggregateInitResp message to complete its initialization. This message is
+<p id="section-4.3.1.2-5">Once the helper has processed each valid report share in <code>AggregateInitializeReq.report_shares</code>, the
+helper then creates an AggregateInitializeResp message to complete its initialization. This message is
 structured as follows:<a href="#section-4.3.1.2-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3.1.2-6">
 <pre>
@@ -2360,20 +2358,20 @@ struct {
 struct {
   AggregationJobID job_id;
   PrepareStep prepare_steps&lt;1..2^16-1&gt;;
-} AggregateInitResp;
+} AggregateInitializeResp;
 </pre><a href="#section-4.3.1.2-6" class="pilcrow">¶</a>
 </div>
-<p id="section-4.3.1.2-7">The <code>job_id</code> parameter is equal to AggregateInitReq.job_id.
+<p id="section-4.3.1.2-7">The <code>job_id</code> parameter is equal to AggregateInitializeReq.job_id.
 The rest of the message is a sequence of PrepareStep values, the order of which
-matches that of the ReportShare values in <code>AggregateInitReq.report_shares</code>. Each report
+matches that of the ReportShare values in <code>AggregateInitializeReq.report_shares</code>. Each report
 that was marked as invalid is assigned the PrepareStepResult <code>failed</code>. Otherwise, the
 PrepareStep is either marked as continued with the output <code>prep_msg</code>, or is marked
 as finished if the VDAF preparation process is finished for the report share.<a href="#section-4.3.1.2-7" class="pilcrow">¶</a></p>
 <p id="section-4.3.1.2-8">The helper's response to the leader is an HTTP 200 OK whose body is the
-AggregateInitResp and media type is "message/ppm-aggregate-init-resp".<a href="#section-4.3.1.2-8" class="pilcrow">¶</a></p>
-<p id="section-4.3.1.2-9">Upon receipt of a helper's AggregateInitResp message, the leader checks that the
+AggregateInitializeResp and media type is "message/ppm-aggregate-initialize-resp".<a href="#section-4.3.1.2-8" class="pilcrow">¶</a></p>
+<p id="section-4.3.1.2-9">Upon receipt of a helper's AggregateInitializeResp message, the leader checks that the
 sequence of PrepareStep messages corresponds to the ReportShare sequence of the
-AggregateInitReq. If any message appears out of order, is missing, has an
+AggregateInitializeReq. If any message appears out of order, is missing, has an
 unrecognized nonce, or if two messages have the same nonce, then the leader <span class="bcp14">MUST</span>
 abort with error "unrecognizedMessage".<a href="#section-4.3.1.2-9" class="pilcrow">¶</a></p>
 <p id="section-4.3.1.2-10">[[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom does it abort?]]<a href="#section-4.3.1.2-10" class="pilcrow">¶</a></p>
@@ -2594,7 +2592,7 @@ then awaits the next message from the leader.<a href="#section-4.3.2.2-10" class
 <p id="section-4.4-1">In this phase, the collector requests aggregate shares from each aggregator
 and then locally combines them to yield a single, aggregate output. In particular,
 the collector asks the leader to collect and return the results for a given
-PPM task over a given time period. The aggregate shares are encrypted to the
+DAP task over a given time period. The aggregate shares are encrypted to the
 collector so that it can decrypt and combine them to yield the aggregate output.
 This entire process is composed of two interactions:<a href="#section-4.4-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-4.4-2">
@@ -2631,7 +2629,7 @@ struct {
 <p id="section-4.4.1-4">The named parameters are:<a href="#section-4.4.1-4" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.4.1-5.1">
-              <code>task_id</code>, the PPM task ID.<a href="#section-4.4.1-5.1" class="pilcrow">¶</a>
+              <code>task_id</code>, the DAP task ID.<a href="#section-4.4.1-5.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.4.1-5.2">
               <code>batch_interval</code>, the request's batch interval.<a href="#section-4.4.1-5.2" class="pilcrow">¶</a>
@@ -2717,7 +2715,7 @@ struct {
 </div>
 <ul class="normal">
 <li class="normal" id="section-4.4.2-4.1">
-              <code>task_id</code> is the task ID associated with the PPM parameters.<a href="#section-4.4.2-4.1" class="pilcrow">¶</a>
+              <code>task_id</code> is the task ID associated with the DAP parameters.<a href="#section-4.4.2-4.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.4.2-4.2">
               <code>batch_interval</code> is the batch interval of the request.<a href="#section-4.4.2-4.2" class="pilcrow">¶</a>
@@ -2843,15 +2841,15 @@ request, and <code>server_role</code> is the role of the server that sent the ag
           </h4>
 <p id="section-4.4.5-1">Before an aggregator responds to a collect request or aggregate-share request,
 it must first check that the request does not violate the parameters associated
-with the PPM task. It does so as described here.<a href="#section-4.4.5-1" class="pilcrow">¶</a></p>
+with the DAP task. It does so as described here.<a href="#section-4.4.5-1" class="pilcrow">¶</a></p>
 <p id="section-4.4.5-2">First the aggregator checks that the request's batch interval respects the
-boundaries defined by the PPM task's parameters. Namely, it checks that both
+boundaries defined by the DAP task's parameters. Namely, it checks that both
 <code>batch_interval.start</code> and <code>batch_interval.duration</code> are divisible by
 <code>min_batch_duration</code> and that <code>batch_interval.duration &gt;= min_batch_duration</code>.
 Unless both these conditions are true, the aggregator <span class="bcp14">MUST</span> abort and alert its
 peer with error "batchInvalid".<a href="#section-4.4.5-2" class="pilcrow">¶</a></p>
 <p id="section-4.4.5-3">Next, the aggregator checks that the request respects the generic privacy
-parameters of the PPM task. Let <code>X</code> denote the set of reports for which the
+parameters of the DAP task. Let <code>X</code> denote the set of reports for which the
 aggregator has recovered a valid output share and which fall in the batch
 interval of the request.<a href="#section-4.4.5-3" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -2873,7 +2871,7 @@ alert the peer with "batchLifetimeExceeded".<a href="#section-4.4.5-4.2" class="
           </h4>
 <p id="section-4.4.6-1">Using a client-provided report multiple times within a single batch, or using
 the same report in multiple batches, may allow a server to learn information
-about the client's measurement, violating the privacy goal of PPM. To
+about the client's measurement, violating the privacy goal of DAP. To
 prevent such replay attacks, this specification requires the aggregators to
 detect and filter out replayed reports.<a href="#section-4.4.6-1" class="pilcrow">¶</a></p>
 <p id="section-4.4.6-2">To detect replay attacks, each aggregator keeps track of the set of nonces
@@ -2903,7 +2901,7 @@ described in <a href="#batch-parameter-validation" class="xref">Section 4.4.5</a
       <h2 id="name-operational-considerations">
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-operational-considerations" class="section-name selfRef">Operational Considerations</a>
       </h2>
-<p id="section-5-1">PPM protocols have inherent constraints derived from the tradeoff between
+<p id="section-5-1">The DAP protocol has inherent constraints derived from the tradeoff between
 privacy guarantees and computational complexity. These tradeoffs influence how
 applications may choose to utilize services implementing the specification.<a href="#section-5-1" class="pilcrow">¶</a></p>
 <div id="entity-capabilities">
@@ -2946,7 +2944,7 @@ reports; and<a href="#section-5.1.2-2.1" class="pilcrow">¶</a>
 protocol.<a href="#section-5.1.2-2.2" class="pilcrow">¶</a>
 </li>
           </ul>
-<p id="section-5.1.2-3">In addition, for each PPM task, helpers are required to:<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-3">In addition, for each DAP task, helpers are required to:<a href="#section-5.1.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-4.1">Implement some form of batch-to-report index, as well as inter- and
 intra-batch replay mitigation storage, which includes some way of tracking
@@ -2964,7 +2962,7 @@ required to:<a href="#section-5.1.2-5" class="pilcrow">¶</a></p>
 shares from helpers.<a href="#section-5.1.2-6.2" class="pilcrow">¶</a>
 </li>
           </ul>
-<p id="section-5.1.2-7">In addition, for each PPM task, leaders are required to:<a href="#section-5.1.2-7" class="pilcrow">¶</a></p>
+<p id="section-5.1.2-7">In addition, for each DAP task, leaders are required to:<a href="#section-5.1.2-7" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-8.1">Implement and store state for the form of inter- and intra-batch replay
 mitigation in <a href="#anti-replay" class="xref">Section 4.4.6</a>; and<a href="#section-5.1.2-8.1" class="pilcrow">¶</a>
@@ -3034,7 +3032,7 @@ against the urgency of responding to a soft deadline.<a href="#section-5.3-3" cl
         <h3 id="name-protocol-specific-optimizat">
 <a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-protocol-specific-optimizat" class="section-name selfRef">Protocol-specific optimizations</a>
         </h3>
-<p id="section-5.4-1">Not all PPM tasks have the same operational requirements, so the protocol is
+<p id="section-5.4-1">Not all DAP tasks have the same operational requirements, so the protocol is
 designed to allow implementations to reduce operational costs in certain cases.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
 <div id="reducing-storage-requirements">
 <section id="section-5.4.1">
@@ -3051,7 +3049,7 @@ aggregate share for each possible batch interval, along with the number of times
 the aggregate share was used in a batch. (The helper may store its aggregate
 shares in its encrypted state, thereby offloading this state to the leader.)
 This is due to the requirement that the batch interval respect the boundaries
-defined by the PPM parameters. (See <a href="#batch-parameter-validation" class="xref">Section 4.4.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
+defined by the DAP parameters. (See <a href="#batch-parameter-validation" class="xref">Section 4.4.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -3063,13 +3061,13 @@ defined by the PPM parameters. (See <a href="#batch-parameter-validation" class=
       <h2 id="name-security-considerations">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-6-1">PPM assumes an active attacker that controls the network and has the ability to
+<p id="section-6-1">DAP assumes an active attacker that controls the network and has the ability to
 statically corrupt any number of clients, aggregators, and collectors. That is,
 the attacker can learn the secret state of any party prior to the start of its
 attack. For example, it may coerce a client into providing malicious input
 shares for aggregation or coerce an aggregator into diverting from the
 protocol specified (e.g., by divulging its input shares to the attacker).<a href="#section-6-1" class="pilcrow">¶</a></p>
-<p id="section-6-2">In the presence of this adversary, PPM aims to achieve the following high-level
+<p id="section-6-2">In the presence of this adversary, DAP aims to achieve the following high-level
 secure aggregation goals:<a href="#section-6-2" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-6-3">
 <li id="section-6-3.1">Privacy. Clients trust that some aggregator is honest. That is, as long as at
@@ -3102,7 +3100,7 @@ information to the aggregators and collector beyond what follows from the
 heavy hitters themselves. Note that this leakage can be mitigated using
 differential privacy. [OPEN ISSUE: We have yet not specified how to add DP.]<a href="#section-6-5.2" class="pilcrow">¶</a>
 </li>
-        <li id="section-6-5.3">The core PPM spec does not defend against Sybil attacks. In this type of
+        <li id="section-6-5.3">The core DAP spec does not defend against Sybil attacks. In this type of
 attack, the adversary adds to a batch a number of reports that skew the
 aggregate result in its favor. For example: The result may reveal additional
 information about the honest measurements, leading to a privacy violation; or
@@ -3501,8 +3499,8 @@ agent or in deployments which use it, client authentication information, which
 could be used by aggregators to identify participating clients or permit some
 attacks on robustness. This auxiliary information could be removed by having
 clients submit reports to an anonymizing proxy server which would then use
-Oblivous HTTP <span>[<a href="#I-D.thomson-http-oblivious" class="xref">I-D.thomson-http-oblivious</a>]</span> to forward inputs to the PPM
-leader, without requiring any server participating in PPM to be aware of
+Oblivous HTTP <span>[<a href="#I-D.thomson-http-oblivious" class="xref">I-D.thomson-http-oblivious</a>]</span> to forward inputs to the DAP
+leader, without requiring any server participating in DAP to be aware of
 whatever client authentication or attestation scheme is in use.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
@@ -3511,14 +3509,14 @@ whatever client authentication or attestation scheme is in use.<a href="#section
         <h3 id="name-batch-parameters">
 <a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-batch-parameters" class="section-name selfRef">Batch parameters</a>
         </h3>
-<p id="section-6.4-1">An important parameter of a PPM deployment is the minimum batch size. If an
+<p id="section-6.4-1">An important parameter of a DAP deployment is the minimum batch size. If an
 aggregation includes too few inputs, then the outputs can reveal information
 about individual participants. Aggregators use the batch size field of the
 shared task parameters to enforce minimum batch size during the collect
-protocol, but server implementations may also opt out of participating in a PPM
+protocol, but server implementations may also opt out of participating in a DAP
 task if the minimum batch size is too small. This document does not specify how
 to choose minimum batch sizes.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
-<p id="section-6.4-2">The PPM parameters also specify the maximum number of times a report can be
+<p id="section-6.4-2">The DAP parameters also specify the maximum number of times a report can be
 used. Some protocols, such as Poplar <span>[<a href="#BBCGGI21" class="xref">BBCGGI21</a>]</span>, require reports to be used in
 multiple batches spanning multiple collect requests.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
 </section>
@@ -3528,7 +3526,7 @@ multiple batches spanning multiple collect requests.<a href="#section-6.4-2" cla
         <h3 id="name-differential-privacy">
 <a href="#section-6.5" class="section-number selfRef">6.5. </a><a href="#name-differential-privacy" class="section-name selfRef">Differential privacy</a>
         </h3>
-<p id="section-6.5-1">Optionally, PPM deployments can choose to ensure their output F achieves
+<p id="section-6.5-1">Optionally, DAP deployments can choose to ensure their output F achieves
 differential privacy <span>[<a href="#Vad16" class="xref">Vad16</a>]</span>. A simple approach would require the aggregators
 to add two-sided noise (e.g. sampled from a two-sided geometric distribution) to
 outputs. Since each aggregator is adding noise independently, privacy can be
@@ -3547,7 +3545,7 @@ support by encoding them into task parameters.]<a href="#section-6.5-2" class="p
         <h3 id="name-robustness-in-the-presence-">
 <a href="#section-6.6" class="section-number selfRef">6.6. </a><a href="#name-robustness-in-the-presence-" class="section-name selfRef">Robustness in the presence of malicious servers</a>
         </h3>
-<p id="section-6.6-1">Most PPM protocols, including Prio and Poplar, are robust against malicious
+<p id="section-6.6-1">Most DAP protocols, including Prio and Poplar, are robust against malicious
 clients, but are not robust against malicious servers. Any aggregator can simply
 emit bogus aggregate shares and undetectably spoil aggregates. If enough
 aggregators were available, this could be mitigated by running the protocol
@@ -3606,9 +3604,9 @@ corresponding media types types:<a href="#section-7.1-1" class="pilcrow">¶</a><
 </li>
           <li class="normal" id="section-7.1-2.2">Report <a href="#upload-request" class="xref">Section 4.2.2</a>: "message/ppm-report"<a href="#section-7.1-2.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-7.1-2.3">AggregateInitReq <a href="#collect-flow" class="xref">Section 4.4</a>: "message/ppm-aggregate-init-req"<a href="#section-7.1-2.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-7.1-2.3">AggregateInitializeReq <a href="#collect-flow" class="xref">Section 4.4</a>: "message/ppm-aggregate-initialize-req"<a href="#section-7.1-2.3" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-7.1-2.4">AggregateInitResp <a href="#collect-flow" class="xref">Section 4.4</a>: "message/ppm-aggregate-init-resp"<a href="#section-7.1-2.4" class="pilcrow">¶</a>
+          <li class="normal" id="section-7.1-2.4">AggregateInitializeResp <a href="#collect-flow" class="xref">Section 4.4</a>: "message/ppm-aggregate-initialize-resp"<a href="#section-7.1-2.4" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-7.1-2.5">AggregateContinueReq <a href="#collect-flow" class="xref">Section 4.4</a>: "message/ppm-aggregate-continue-req"<a href="#section-7.1-2.5" class="pilcrow">¶</a>
 </li>
@@ -3855,7 +3853,7 @@ in this section for all media types listed above.<a href="#section-7.1-5" class=
             <dd class="break"></dd>
 <dt id="section-7.1.3-1.3">Subtype name:</dt>
             <dd style="margin-left: 1.5em" id="section-7.1.3-1.4">
-              <p id="section-7.1.3-1.4.1">ppm-aggregate-init-req<a href="#section-7.1.3-1.4.1" class="pilcrow">¶</a></p>
+              <p id="section-7.1.3-1.4.1">ppm-aggregate-initialize-req<a href="#section-7.1.3-1.4.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-7.1.3-1.5">Required parameters:</dt>
@@ -3948,10 +3946,10 @@ in this section for all media types listed above.<a href="#section-7.1-5" class=
 </dl>
 </section>
 </div>
-<div id="messageppm-aggregate-init-resp-media-type">
+<div id="messageppm-aggregate-initialize-resp-media-type">
 <section id="section-7.1.4">
-          <h4 id="name-message-ppm-aggregate-init-">
-<a href="#section-7.1.4" class="section-number selfRef">7.1.4. </a><a href="#name-message-ppm-aggregate-init-" class="section-name selfRef">"message/ppm-aggregate-init-resp" media type</a>
+          <h4 id="name-message-ppm-aggregate-initi">
+<a href="#section-7.1.4" class="section-number selfRef">7.1.4. </a><a href="#name-message-ppm-aggregate-initi" class="section-name selfRef">"message/ppm-aggregate-initialize-resp" media type</a>
           </h4>
 <span class="break"></span><dl class="dlParallel" id="section-7.1.4-1">
             <dt id="section-7.1.4-1.1">Type name:</dt>
@@ -3961,7 +3959,7 @@ in this section for all media types listed above.<a href="#section-7.1-5" class=
             <dd class="break"></dd>
 <dt id="section-7.1.4-1.3">Subtype name:</dt>
             <dd style="margin-left: 1.5em" id="section-7.1.4-1.4">
-              <p id="section-7.1.4-1.4.1">ppm-aggregate-init-resp<a href="#section-7.1.4-1.4.1" class="pilcrow">¶</a></p>
+              <p id="section-7.1.4-1.4.1">ppm-aggregate-initialize-resp<a href="#section-7.1.4-1.4.1" class="pilcrow">¶</a></p>
 </dd>
             <dd class="break"></dd>
 <dt id="section-7.1.4-1.5">Required parameters:</dt>
@@ -4702,10 +4700,10 @@ protocol. This registry should contain the following columns:<a href="#section-7
 <p id="section-7.2-2">[TODO: define how we want to structure this registry when the time comes]<a href="#section-7.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="ppm-urn-space">
+<div id="urn-space">
 <section id="section-7.3">
-        <h3 id="name-urn-sub-namespace-for-ppm-u">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-urn-sub-namespace-for-ppm-u" class="section-name selfRef">URN Sub-namespace for PPM (urn:ietf:params:ppm)</a>
+        <h3 id="name-urn-sub-namespace-for-dap-u">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-urn-sub-namespace-for-dap-u" class="section-name selfRef">URN Sub-namespace for DAP (urn:ietf:params:ppm)</a>
         </h3>
 <p id="section-7.3-1">The following value [will be/has been] registered in the "IETF URN
 Sub-namespace for Registered Protocol Parameter Identifiers" registry,
