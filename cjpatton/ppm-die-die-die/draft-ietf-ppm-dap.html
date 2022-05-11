@@ -1357,7 +1357,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                 <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="xref">7.2</a>.  <a href="#name-upload-extension-registry" class="xref">Upload Extension Registry</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="xref">7.3</a>.  <a href="#name-urn-sub-namespace-for-dap-u" class="xref">URN Sub-namespace for DAP (urn:ietf:params:dap)</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="xref">7.3</a>.  <a href="#name-urn-sub-namespace-for-dap-u" class="xref">URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)</a></p>
 </li>
             </ul>
 </li>
@@ -1741,7 +1741,8 @@ submits a request using a method not allowed in this document, then the server
 <p id="section-3.1-2">When the server responds with an error status, it <span class="bcp14">SHOULD</span> provide additional
 information using a problem document <span>[<a href="#RFC7807" class="xref">RFC7807</a>]</span>. To facilitate automatic
 response to errors, this document defines the following standard tokens for use
-in the "type" field (within the DAP URN namespace "urn:ietf:params:dap:error:"):<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+in the "type" field (within the DAP URN namespace
+"urn:ietf:params:ppm:dap:error:"):<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
           <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1805,7 +1806,7 @@ and filename safe alphabet with no padding defined in sections 5 and 3.2 of
 <p id="section-3.1-5">In the remainder of this document, we use the tokens in the table above to refer
 to error types, rather than the full URNs. For example, an "error of type
 'unrecognizedMessage'" refers to an error document with "type" value
-"urn:ietf:params:dap:error:unrecognizedMessage".<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+"urn:ietf:params:ppm:dap:error:unrecognizedMessage".<a href="#section-3.1-5" class="pilcrow">¶</a></p>
 <p id="section-3.1-6">This document uses the verbs "abort" and "alert with <code>[some error message]</code>" to
 describe how protocol participants react to various error conditions.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
 </section>
@@ -4703,7 +4704,7 @@ protocol. This registry should contain the following columns:<a href="#section-7
 <div id="urn-space">
 <section id="section-7.3">
         <h3 id="name-urn-sub-namespace-for-dap-u">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-urn-sub-namespace-for-dap-u" class="section-name selfRef">URN Sub-namespace for DAP (urn:ietf:params:dap)</a>
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-urn-sub-namespace-for-dap-u" class="section-name selfRef">URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)</a>
         </h3>
 <p id="section-7.3-1">The following value [will be/has been] registered in the "IETF URN
 Sub-namespace for Registered Protocol Parameter Identifiers" registry,
