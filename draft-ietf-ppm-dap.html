@@ -2107,12 +2107,10 @@ the previous aggregate result may result in a privacy violation. (Note that the
 helpers enforce this as well; see <a href="#collect-flow" class="xref">Section 4.4</a>.) In addition, the
 leader <span class="bcp14">SHOULD</span> abort the upload protocol and alert the client with error
 "reportTooLate".<a href="#section-4.2.2-13" class="pilcrow">¶</a></p>
-<p id="section-4.2.2-14">The leader <span class="bcp14">MUST</span> buffer reports while waiting to aggregate them. The
-leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too far in the future.
-Implementors <span class="bcp14">MAY</span> provide for some small leeway, usually no more than a few
-minutes, to account for clock skew. If the leader rejects a report for this
-reason, it <span class="bcp14">SHOULD</span> abort the upload protocol and alert the client with error
-"reportTooEarly".<a href="#section-4.2.2-14" class="pilcrow">¶</a></p>
+<p id="section-4.2.2-14">Leaders can buffer reports while waiting to aggregate them. The leader <span class="bcp14">SHOULD NOT</span> accept reports whose timestamps are too far in the future. Implementors <span class="bcp14">MAY</span>
+provide for some small leeway, usually no more than a few minutes, to account
+for clock skew. If the leader rejects a report for this reason, it <span class="bcp14">SHOULD</span> abort
+the upload protocol and alert the client with error "reportTooEarly".<a href="#section-4.2.2-14" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="upload-extensions">
