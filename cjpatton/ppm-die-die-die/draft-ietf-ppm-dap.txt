@@ -425,8 +425,7 @@ Table of Contents
    additional information using a problem document [RFC7807].  To
    facilitate automatic response to errors, this document defines the
    following standard tokens for use in the "type" field (within the DAP
-   URN namespace "urn:ietf:params:dap:error:"): >>>>>>> 4752c36 (Replace
-   "ppm" with "dap" and align context strings with next draft)
+   URN namespace "urn:ietf:params:dap:error:"):
 
     +=======================+=========================================+
     | Type                  | Description                             |
