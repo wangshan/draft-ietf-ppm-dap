@@ -1970,7 +1970,7 @@ individual shares to each helper.<a href="#section-4.2-1" class="pilcrow">¶</a>
           </h4>
 <p id="section-4.2.1-1">Before the client can upload its report to the leader, it must know the public
 key of each of the aggregators. These are retrieved from each aggregator by
-sending a request to <code>[aggregator]/hpke_config?task_id=[task-id]</code>, where
+sending an HTTP GET request to <code>[aggregator]/hpke_config?task_id=[task-id]</code>, where
 <code>[aggregator]</code> is the aggregator's endpoint URL, obtained from the task
 parameters, and <code>[task-id]</code> is the task ID obtained from the task parameters,
 encoded in Base 64 with URL and filename safe alphabet with no padding, as
