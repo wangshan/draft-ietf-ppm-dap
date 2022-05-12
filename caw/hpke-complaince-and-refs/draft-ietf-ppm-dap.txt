@@ -1673,9 +1673,9 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
 6.  Compliance Requirements
 
-   In the absence of an application profile standard specifying
-   otherwise, a compliant DAP application MUST implement the following
-   HPKE cipher suite:
+   In the absence of an application or deployment-specific profile
+   specifying otherwise, a compliant DAP application MUST implement the
+   following HPKE cipher suite:
 
    *  KEM: DHKEM(X25519, HKDF-SHA256) (see [HPKE], Section 7.1)
 
