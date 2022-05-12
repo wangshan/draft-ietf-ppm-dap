@@ -628,9 +628,8 @@ struct {
 4.2.1.  HPKE Configuration Request
 
    Before the client can upload its report to the leader, it must know
-   the HPKE configuration of each aggregator.  Each task ID corresponds
-   to exactly one HPKE configuration.  See Section 6 for information on
-   HPKE configuration algorithms.
+   the HPKE configuration of each aggregator.  See Section 6 for
+   information on HPKE configuration algorithms.
 
    Clients retrieve the HPKE configuration from each aggregator by
    sending an HTTP GET request to

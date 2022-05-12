@@ -1972,8 +1972,7 @@ individual shares to each helper.<a href="#section-4.2-1" class="pilcrow">¶</a>
 <a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-hpke-configuration-request" class="section-name selfRef">HPKE Configuration Request</a>
           </h4>
 <p id="section-4.2.1-1">Before the client can upload its report to the leader, it must know the HPKE
-configuration of each aggregator. Each task ID corresponds to exactly one HPKE
-configuration. See <a href="#compliance" class="xref">Section 6</a> for information on HPKE configuration algorithms.<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
+configuration of each aggregator. See <a href="#compliance" class="xref">Section 6</a> for information on HPKE configuration algorithms.<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.2.1-2">Clients retrieve the HPKE configuration from each aggregator by sending an HTTP
 GET request to <code>[aggregator]/hpke_config?task_id=[task-id]</code>, where <code>[aggregator]</code>
 is the aggregator's endpoint URL, obtained from the task parameters, and <code>[task-id]</code>
