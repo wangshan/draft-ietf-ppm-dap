@@ -1975,7 +1975,7 @@ sending an HTTP GET request to <code>[aggregator]/hpke_config?task_id=[task-id]<
 parameters, and <code>[task-id]</code> is the task ID obtained from the task parameters,
 encoded in Base 64 with URL and filename safe alphabet with no padding, as
 specified in sections 5 and 3.2 of <span>[<a href="#RFC4648" class="xref">RFC4648</a>]</span>. If the aggregator does not
-recognize the task ID, then it responds with HTTP status code 404 and
+recognize the task ID, then it responds with HTTP status code 404 Not Found and
 an error of type <code>unrecognizedTask</code>. The aggregator responds to well-formed
 requests with HTTP status code 200 OK and an <code>HpkeConfig</code> value:<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.2.1-2">[TODO: Allow aggregators to return HTTP status code 403 Forbidden in deployments
