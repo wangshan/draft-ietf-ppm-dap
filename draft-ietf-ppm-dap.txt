@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 14 November 2022                                     Cloudflare
+Expires: 17 November 2022                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                             13 May 2022
+                                                             16 May 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -33,11 +33,12 @@ Discussion Venues
 
    This note is to be removed before publishing as an RFC.
 
-   Discussion of this document takes place on the mailing list (), which
-   is archived at .
+   Discussion of this document takes place on the Privacy Preserving
+   Measurement Working Group mailing list (ppm@ietf.org), which is
+   archived at https://mailarchive.ietf.org/arch/browse/ppm/.
 
    Source for this draft and an issue tracker can be found at
-   https://github.com/ietf-wg-ppm/ppm-specification.
+   https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap.
 
 Status of This Memo
 
@@ -54,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 November 2022.
+   This Internet-Draft will expire on 17 November 2022.
 
 Copyright Notice
 
