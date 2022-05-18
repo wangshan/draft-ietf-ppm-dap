@@ -74,8 +74,7 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction
-     1.1.  WORK IN PROGRESS
-     1.2.  Conventions and Definitions
+     1.1.  Conventions and Definitions
    2.  Overview
      2.1.  System Architecture
      2.2.  Validating Inputs
@@ -154,14 +153,7 @@ Table of Contents
    long as at least one of them executes the protocol honestly, no input
    is ever seen in the clear by any server.
 
-1.1.  WORK IN PROGRESS
-
-   This draft is being developed within the PPM working group.  The
-   repository can be found at https://github.com/ietf-wg-ppm/draft-ietf-
-   ppm-dap.  The protocol described here is a work-in-progress and has
-   not yet undergone significant security analysis.
-
-1.2.  Conventions and Definitions
+1.1.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
