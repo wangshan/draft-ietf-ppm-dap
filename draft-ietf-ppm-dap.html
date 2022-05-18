@@ -2177,13 +2177,9 @@ the next batch are coming in. This is because each report is validated independe
 <p id="section-4.3-6">This process is illustrated below in <a href="#aggregation-flow-illustration" class="xref">Figure 2</a>. In this
 example, the batch size is 20, but the leader opts to process the reports in
 sub-batches of 10. Each sub-batch takes two round-trips to process.<a href="#section-4.3-6" class="pilcrow">¶</a></p>
-<p id="section-4.3-7">In order to allow the helpers to retain minimal state, the helper can attach a
-state parameter to its response, with the leader returning the state value in
-the next request, thus offloading the state to the leader. This state value <span class="bcp14">MUST</span>
-be cryptographically protected as described in <a href="#agg-init" class="xref">Section 4.3.1</a>.<a href="#section-4.3-7" class="pilcrow">¶</a></p>
 <span id="name-aggregation-flow-batch-size"></span><div id="aggregation-flow-illustration">
 <figure id="figure-2">
-          <div class="alignLeft art-text artwork" id="section-4.3-8.1">
+          <div class="alignLeft art-text artwork" id="section-4.3-7.1">
 <pre>
 Leader                                                 Helper
 
@@ -2203,22 +2199,22 @@ Aggregate request (continued, Job = M) ------------------&gt;  | 11-20
 <a href="#name-aggregation-flow-batch-size" class="selfRef">Aggregation Flow (batch size=20). Multiple aggregation flows can be executed at the same time.</a>
           </figcaption></figure>
 </div>
-<p id="section-4.3-9">[OPEN ISSUE: Should there be an indication of whether a given aggregate request is a
-continuation of a previous sub-batch?]<a href="#section-4.3-9" class="pilcrow">¶</a></p>
-<p id="section-4.3-10">The aggregation flow can be thought of as having three phases for transforming
-each valid input report share into an output share:<a href="#section-4.3-10" class="pilcrow">¶</a></p>
+<p id="section-4.3-8">[OPEN ISSUE: Should there be an indication of whether a given aggregate request is a
+continuation of a previous sub-batch?]<a href="#section-4.3-8" class="pilcrow">¶</a></p>
+<p id="section-4.3-9">The aggregation flow can be thought of as having three phases for transforming
+each valid input report share into an output share:<a href="#section-4.3-9" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.3-11.1">Initialization: Begin the aggregation flow by sharing report shares with each
+<li class="normal" id="section-4.3-10.1">Initialization: Begin the aggregation flow by sharing report shares with each
 helper. Each aggregator, including the leader, initializates the underlying
 VDAF instance using these report shares and the VDAF configured for the
-corresponding measurement task.<a href="#section-4.3-11.1" class="pilcrow">¶</a>
+corresponding measurement task.<a href="#section-4.3-10.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.3-11.2">Continuation: Continue the aggregation flow by exchanging messages produced
+          <li class="normal" id="section-4.3-10.2">Continuation: Continue the aggregation flow by exchanging messages produced
 by the underlying VDAF instance until aggregation completes or an error occurs.
-These messages do not replay the shares.<a href="#section-4.3-11.2" class="pilcrow">¶</a>
+These messages do not replay the shares.<a href="#section-4.3-10.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.3-11.3">Completion: Finish the aggregate flow, yielding an output share corresponding
-for each input report share in the batch.<a href="#section-4.3-11.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-4.3-10.3">Completion: Finish the aggregate flow, yielding an output share corresponding
+for each input report share in the batch.<a href="#section-4.3-10.3" class="pilcrow">¶</a>
 </li>
         </ul>
 <div id="agg-init">
@@ -2947,9 +2943,8 @@ protocol.<a href="#section-5.1.2-2.2" class="pilcrow">¶</a>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-4.1">Implement some form of batch-to-report index, as well as inter- and
 intra-batch replay mitigation storage, which includes some way of tracking
-batch report size with optional support for state offloading. Some of this
-state may be used for replay attack mitigation. The replay mitigation strategy
-is described in <a href="#anti-replay" class="xref">Section 4.4.6</a>.<a href="#section-5.1.2-4.1" class="pilcrow">¶</a>
+batch report size. Some of this state may be used for replay attack
+mitigation. The replay mitigation strategy is described in <a href="#anti-replay" class="xref">Section 4.4.6</a>.<a href="#section-5.1.2-4.1" class="pilcrow">¶</a>
 </li>
           </ul>
 <p id="section-5.1.2-5">Beyond the minimal capabilities required of helpers, leaders are generally
@@ -2965,8 +2960,6 @@ shares from helpers.<a href="#section-5.1.2-6.2" class="pilcrow">¶</a>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-8.1">Implement and store state for the form of inter- and intra-batch replay
 mitigation in <a href="#anti-replay" class="xref">Section 4.4.6</a>; and<a href="#section-5.1.2-8.1" class="pilcrow">¶</a>
-</li>
-            <li class="normal" id="section-5.1.2-8.2">Store helper state.<a href="#section-5.1.2-8.2" class="pilcrow">¶</a>
 </li>
           </ul>
 </section>
@@ -3045,10 +3038,9 @@ must store a batch as long as the batch has not been queried more than
 reports themselves. For schemes like Prio in which the input-validation protocol
 is only run once per report, each aggregator only needs to store its
 aggregate share for each possible batch interval, along with the number of times
-the aggregate share was used in a batch. (The helper may store its aggregate
-shares in its encrypted state, thereby offloading this state to the leader.)
-This is due to the requirement that the batch interval respect the boundaries
-defined by the DAP parameters. (See <a href="#batch-parameter-validation" class="xref">Section 4.4.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
+the aggregate share was used in a batch. This is due to the requirement that the
+batch interval respect the boundaries defined by the DAP parameters. (See
+<a href="#batch-parameter-validation" class="xref">Section 4.4.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
