@@ -1143,10 +1143,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
             <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
-                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-disclaimer" class="xref">DISCLAIMER</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
-                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="xref">1.2</a>.  <a href="#name-conventions-and-definitions" class="xref">Conventions and Definitions</a></p>
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-conventions-and-definitions" class="xref">Conventions and Definitions</a></p>
 </li>
             </ul>
 </li>
@@ -1154,7 +1151,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
             <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-overview" class="xref">Overview</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
-                <p id="section-toc.1-1.2.2.1.1"><a href="#section-2.1" class="xref">2.1</a>.  <a href="#name-system-architecture" class="xref">System Architecture</a></p>
+                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="xref">2.1</a>.  <a href="#name-system-architecture" class="xref">System Architecture</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
                 <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="xref">2.2</a>.  <a href="#name-validating-inputs" class="xref">Validating Inputs</a></p>
@@ -1394,139 +1391,130 @@ over the clients' inputs without learning the inputs themselves. This is made
 possible by distributing the computation among the servers in such a way that,
 as long as at least one of them executes the protocol honestly, no input is ever
 seen in the clear by any server.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<div id="disclaimer">
-<section id="section-1.1">
-        <h3 id="name-disclaimer">
-<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-disclaimer" class="section-name selfRef">DISCLAIMER</a>
-        </h3>
-<p id="section-1.1-1">This document is a work in progress. We have not yet settled on the design of
-the protocol framework or the set of features we intend to support.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="conventions-and-definitions">
-<section id="section-1.2">
+<section id="section-1.1">
         <h3 id="name-conventions-and-definitions">
-<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
         </h3>
-<p id="section-1.2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+<p id="section-1.1-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
 "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
 described in BCP 14 <span>[<a href="#RFC2119" class="xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="xref">RFC8174</a>]</span> when, and only when, they
-appear in all capitals, as shown here.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
-<p id="section-1.2-2">The following terms are used:<a href="#section-1.2-2" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-1.2-3">
-          <dt id="section-1.2-3.1">Aggregation function:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.2">
-            <p id="section-1.2-3.2.1">The function computed over the users' inputs.<a href="#section-1.2-3.2.1" class="pilcrow">¶</a></p>
+appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">The following terms are used:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<span class="break"></span><dl class="dlParallel" id="section-1.1-3">
+          <dt id="section-1.1-3.1">Aggregation function:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.2">
+            <p id="section-1.1-3.2.1">The function computed over the users' inputs.<a href="#section-1.1-3.2.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.3">Aggregator:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.4">
-            <p id="section-1.2-3.4.1">An endpoint that runs the input-validation protocol and accumulates input
- shares.<a href="#section-1.2-3.4.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.3">Aggregator:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.4">
+            <p id="section-1.1-3.4.1">An endpoint that runs the input-validation protocol and accumulates input
+ shares.<a href="#section-1.1-3.4.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.5">Batch:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.6">
-            <p id="section-1.2-3.6.1">A set of reports that are aggregated into an output.<a href="#section-1.2-3.6.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.5">Batch:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.6">
+            <p id="section-1.1-3.6.1">A set of reports that are aggregated into an output.<a href="#section-1.1-3.6.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.7">Batch duration:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.8">
-            <p id="section-1.2-3.8.1">The time difference between the oldest and newest report in a batch.<a href="#section-1.2-3.8.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.7">Batch duration:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.8">
+            <p id="section-1.1-3.8.1">The time difference between the oldest and newest report in a batch.<a href="#section-1.1-3.8.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.9">Batch interval:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.10">
-            <p id="section-1.2-3.10.1">A parameter of the collect or aggregate-share request that specifies the time
- range of the reports in the batch.<a href="#section-1.2-3.10.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.9">Batch interval:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.10">
+            <p id="section-1.1-3.10.1">A parameter of the collect or aggregate-share request that specifies the time
+ range of the reports in the batch.<a href="#section-1.1-3.10.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.11">Client:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.12">
-            <p id="section-1.2-3.12.1">The endpoint from which a user sends data to be aggregated, e.g., a web
- browser.<a href="#section-1.2-3.12.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.11">Client:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.12">
+            <p id="section-1.1-3.12.1">The endpoint from which a user sends data to be aggregated, e.g., a web
+ browser.<a href="#section-1.1-3.12.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.13">Collector:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.14">
-            <p id="section-1.2-3.14.1">The endpoint that receives the output of the aggregation function.<a href="#section-1.2-3.14.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.13">Collector:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.14">
+            <p id="section-1.1-3.14.1">The endpoint that receives the output of the aggregation function.<a href="#section-1.1-3.14.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.15">Input:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.16">
-            <p id="section-1.2-3.16.1">The measurement (or measurements) emitted by a client, before any encryption
- or secret sharing scheme is applied.<a href="#section-1.2-3.16.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.15">Input:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.16">
+            <p id="section-1.1-3.16.1">The measurement (or measurements) emitted by a client, before any encryption
+ or secret sharing scheme is applied.<a href="#section-1.1-3.16.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.17">Input share:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.18">
-            <p id="section-1.2-3.18.1">An aggregator's share of the output of the VDAF
+<dt id="section-1.1-3.17">Input share:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.18">
+            <p id="section-1.1-3.18.1">An aggregator's share of the output of the VDAF
  <span>[<a href="#VDAF" class="xref">VDAF</a>]</span> sharding algorithm. This algorithm is run by
- each client in order to cryptographically protect its measurement.<a href="#section-1.2-3.18.1" class="pilcrow">¶</a></p>
+ each client in order to cryptographically protect its measurement.<a href="#section-1.1-3.18.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.19">Measurement:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.20">
-            <p id="section-1.2-3.20.1">A single value (e.g., a count) being reported by a client. Multiple
- measurements may be grouped into a single protocol input.<a href="#section-1.2-3.20.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.19">Measurement:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.20">
+            <p id="section-1.1-3.20.1">A single value (e.g., a count) being reported by a client. Multiple
+ measurements may be grouped into a single protocol input.<a href="#section-1.1-3.20.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.21">Minimum batch duration:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.22">
-            <p id="section-1.2-3.22.1">The minimum batch duration permitted for a DAP task, i.e., the minimum time
- difference between the oldest and newest report in a batch.<a href="#section-1.2-3.22.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.21">Minimum batch duration:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.22">
+            <p id="section-1.1-3.22.1">The minimum batch duration permitted for a DAP task, i.e., the minimum time
+ difference between the oldest and newest report in a batch.<a href="#section-1.1-3.22.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.23">Minimum batch size:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.24">
-            <p id="section-1.2-3.24.1">The minimum number of reports in a batch.<a href="#section-1.2-3.24.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.23">Minimum batch size:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.24">
+            <p id="section-1.1-3.24.1">The minimum number of reports in a batch.<a href="#section-1.1-3.24.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.25">Leader:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.26">
-            <p id="section-1.2-3.26.1">A distinguished aggregator that coordinates input validation and data
- collection.<a href="#section-1.2-3.26.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.25">Leader:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.26">
+            <p id="section-1.1-3.26.1">A distinguished aggregator that coordinates input validation and data
+ collection.<a href="#section-1.1-3.26.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.27">Aggregate result:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.28">
-            <p id="section-1.2-3.28.1">The output of the aggregation function over a given set of reports.<a href="#section-1.2-3.28.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.27">Aggregate result:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.28">
+            <p id="section-1.1-3.28.1">The output of the aggregation function over a given set of reports.<a href="#section-1.1-3.28.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.29">Aggregate share:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.30">
-            <p id="section-1.2-3.30.1">A share of the aggregate result emitted by an aggregator. Aggregate shares are
- reassembled by the collector into the final output.<a href="#section-1.2-3.30.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.29">Aggregate share:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.30">
+            <p id="section-1.1-3.30.1">A share of the aggregate result emitted by an aggregator. Aggregate shares are
+ reassembled by the collector into the final output.<a href="#section-1.1-3.30.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.31">Output share:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.32">
-            <p id="section-1.2-3.32.1">An aggregator's share of the output of the VDAF
+<dt id="section-1.1-3.31">Output share:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.32">
+            <p id="section-1.1-3.32.1">An aggregator's share of the output of the VDAF
  <span>[<a href="#VDAF" class="xref">VDAF</a>]</span> preparation step. Many output shares are
- combined into an aggregate share via the VDAF aggregation algorithm.<a href="#section-1.2-3.32.1" class="pilcrow">¶</a></p>
+ combined into an aggregate share via the VDAF aggregation algorithm.<a href="#section-1.1-3.32.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.33">Proof:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.34">
-            <p id="section-1.2-3.34.1">A value generated by the client and used by the aggregators to verify the
-client's input.<a href="#section-1.2-3.34.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.33">Proof:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.34">
+            <p id="section-1.1-3.34.1">A value generated by the client and used by the aggregators to verify the
+client's input.<a href="#section-1.1-3.34.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.35">Report:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.36">
-            <p id="section-1.2-3.36.1">Uploaded to the leader from the client. A report contains the secret-shared
- and encrypted input and proof.<a href="#section-1.2-3.36.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.35">Report:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.36">
+            <p id="section-1.1-3.36.1">Uploaded to the leader from the client. A report contains the secret-shared
+ and encrypted input and proof.<a href="#section-1.1-3.36.1" class="pilcrow">¶</a></p>
 </dd>
           <dd class="break"></dd>
-<dt id="section-1.2-3.37">Server:</dt>
-          <dd style="margin-left: 1.5em" id="section-1.2-3.38">
-            <p id="section-1.2-3.38.1">An aggregator.<a href="#section-1.2-3.38.1" class="pilcrow">¶</a></p>
+<dt id="section-1.1-3.37">Server:</dt>
+          <dd style="margin-left: 1.5em" id="section-1.1-3.38">
+            <p id="section-1.1-3.38.1">An aggregator.<a href="#section-1.1-3.38.1" class="pilcrow">¶</a></p>
 </dd>
         <dd class="break"></dd>
 </dl>
-<p id="section-1.2-4">This document uses the presentation language of <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span> to define messages
+<p id="section-1.1-4">This document uses the presentation language of <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span> to define messages
 in the DAP protocol. Encoding and decoding of these messages as byte strings
-also follows <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>.<a href="#section-1.2-4" class="pilcrow">¶</a></p>
+also follows <span>[<a href="#RFC8446" class="xref">RFC8446</a>]</span>.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1607,7 +1595,7 @@ final output.<a href="#section-2-5.2" class="pilcrow">¶</a>
           </figcaption></figure>
 </div>
 <p id="section-2.1-3">[[OPEN ISSUE: This shows two helpers, but the document only allows one for now.
-https://github.com/ietf-wg-ppm/ppm-specification/issues/117]]<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/117]]<a href="#section-2.1-3" class="pilcrow">¶</a></p>
 <p id="section-2.1-4">The main participants in the protocol are as follows:<a href="#section-2.1-4" class="pilcrow">¶</a></p>
 <span class="break"></span><dl class="dlParallel" id="section-2.1-5">
           <dt id="section-2.1-5.1">Collector:</dt>
@@ -3546,7 +3534,7 @@ the protocol runs do not agree, then participants know that at least one
 aggregator is defective, and it may be possible to identify the defector (i.e.,
 if a majority of runs agree, and a single aggregator appears in every run that
 disagrees). See
-<a href="https://github.com/ietf-wg-ppm/ppm-specification/issues/22">#22</a> for
+<a href="https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/22">#22</a> for
 discussion.<a href="#section-6.6-1" class="pilcrow">¶</a></p>
 </section>
 </div>

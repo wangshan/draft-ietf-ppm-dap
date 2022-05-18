@@ -74,8 +74,7 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction
-     1.1.  DISCLAIMER
-     1.2.  Conventions and Definitions
+     1.1.  Conventions and Definitions
    2.  Overview
      2.1.  System Architecture
      2.2.  Validating Inputs
@@ -154,13 +153,7 @@ Table of Contents
    long as at least one of them executes the protocol honestly, no input
    is ever seen in the clear by any server.
 
-1.1.  DISCLAIMER
-
-   This document is a work in progress.  We have not yet settled on the
-   design of the protocol framework or the set of features we intend to
-   support.
-
-1.2.  Conventions and Definitions
+1.1.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -299,7 +292,7 @@ Table of Contents
                        Figure 1: System Architecture
 
    [[OPEN ISSUE: This shows two helpers, but the document only allows
-   one for now. https://github.com/ietf-wg-ppm/ppm-specification/
+   one for now. https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/
    issues/117]]
 
    The main participants in the protocol are as follows:
@@ -2034,7 +2027,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    aggregator is defective, and it may be possible to identify the
    defector (i.e., if a majority of runs agree, and a single aggregator
    appears in every run that disagrees).  See #22 (https://github.com/
-   ietf-wg-ppm/ppm-specification/issues/22) for discussion.
+   ietf-wg-ppm/draft-ietf-ppm-dap/issues/22) for discussion.
 
 6.7.  Infrastructure diversity
 
