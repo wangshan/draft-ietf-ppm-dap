@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 19 November 2022                                     Cloudflare
+Expires: 20 November 2022                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                             18 May 2022
+                                                             19 May 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -55,7 +55,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 November 2022.
+   This Internet-Draft will expire on 20 November 2022.
 
 Copyright Notice
 
@@ -1499,7 +1499,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    given task.  If the leader receives a report from a client whose
    nonce is in this set, it simply ignores it.  A helper who receives an
    encrypted input share whose nonce is in this set replies to the
-   leader with an error as described in Section 4.4.
+   leader with an error as described in Section 4.3.1.4.
 
    [OPEN ISSUE: This has the potential to require aggreagtors to store
    nonce sests indefinitely.  See issue#180.]
