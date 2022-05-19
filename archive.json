@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-17T01:12:56.318765+00:00",
+  "timestamp": "2022-05-19T01:24:37.313359+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4386,6 +4386,46 @@
       "body": "The server only supplies one config, so what happens if the server would support X22519 and P-256? We can fix this by having the server supply multiple configs.",
       "createdAt": "2022-05-12T15:38:26Z",
       "updatedAt": "2022-05-12T15:38:26Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 255,
+      "id": "I_kwDOFEJYQs5J3GMe",
+      "title": "Consider specifying aggregator behavior on message-deserialization failures.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/255",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The DAP specification defines a number of error modes, which ultimately end up mapped to error codes defined in section 3.1.\r\n\r\nCurrently, the specified behavior does not describe how to treat message-deserialization failures, in any of client-aggregator, aggregator-aggregator, or collector-aggregator communications. We should consider specifying this.\r\n\r\nInitial thoughts:\r\n* Moving to `FAILED` (with a new error code?) or `INVALID` makes sense to me, for deserialization errors during the aggregation process.\r\n* It'd be very nice if one \"bad\" client report didn't fail the entire aggregation job, e.g. we should probably specify behavior that limits the \"blast radius\" of a badly-serialized message.\r\n* We could leave this unspecified; I suppose the risk is that different implementations might treat this error mode with different semantics (e.g. some will fail a single report, some will fail the entirety of the aggregation job).",
+      "createdAt": "2022-05-17T21:34:17Z",
+      "updatedAt": "2022-05-17T21:37:47Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "(This fell out of discussion on https://github.com/divviup/janus/pull/167; FWIW, Janus will currently transition a report aggregation to `INVALID` if it fails to decode a message, though of course that's just one implementation's choice.)",
+          "createdAt": "2022-05-17T21:37:47Z",
+          "updatedAt": "2022-05-17T21:37:47Z"
+        }
+      ]
+    },
+    {
+      "number": 259,
+      "id": "I_kwDOFEJYQs5J78Wa",
+      "title": "Checking `batch-collected` at time of aggregate initalization is insufficient",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/259",
+      "state": "OPEN",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "I think that there is a hole in our anti-replay requirements, for tasks with `max_batch_lifetime > 1`. The issue is that currently, we only require that aggregators check if reports fall in intervals that have already been collected during the leader and helper aggregate initialization, see section `input-share-batch-validation`. We need a similar check either when handling aggregation continuations or the collect flow.\r\n\r\nAs an example of what we should be disallowing, consider a task with `min_batch_size = 10, max_batch_lifetime = 2`. Let's say that all aggregations are done with the same aggregation parameter, whatever it is.\r\n\r\n- The leader sends out an AggregateInitializeReq for its first job, with ten reports.\r\n  - The input share validation checks succeed, as there have been no collect reqeusts yet.\r\n- The leader sends out an AggregateInitializeReq for its second job, with one report. This succeeds as well.\r\n- The leader sends an AggregateContinueReq for its first job, with `finished` transitions.\r\n- The leader sends an AggregateShareReq for an interval that covers all reports in both jobs.\r\n- The leader sends an AggregateContinueReq for its second job, with `finished` transitions.\r\n  - Note that we do not require the helper to do any checks against collect requests when handling aggregation continuations. (see `agg-continue-flow`)\r\n- The leader sends a second AggregateShareReq, identical to the previous request.\r\n  - Note that the checks in `batch-parameter-validation` pass.\r\n    - The batch includes eleven reports, so `min_batch_size` is satisfied.\r\n    - We assumed `max_batch_lifetime = 2`, and each report has been collected zero or one times thus far.\r\n  - Aside from the `max_batch_lifetime` condition, the `collect-aggregate` section does not impose any other checks or conditions requiring the helper to consider previous AggregateShareReq requests when deciding if a request is valid, nor does it require that identical requests always get the same response.\r\n\r\nAfter receiving the two aggregate shares produced above, the collector could compute the aggregate function over both the first ten reports and all eleven reports. For many functions, this would allow recovery of the eleventh input, breaking our privacy goal.\r\n\r\nThere is a paragraph that says:\r\n\r\n> After issuing an aggregate-share request for a given batch interval, it is an error for the leader to issue any more aggregate or aggregate-init requests for additional reports in the batch interval. These reports will be rejected by helpers as described {{agg-init}}.\r\n\r\nHowever, the referenced section only covers the \"aggregate-init\" part, and not aggregate continuation.",
+      "createdAt": "2022-05-18T19:58:46Z",
+      "updatedAt": "2022-05-18T19:58:46Z",
       "closedAt": null,
       "comments": []
     }
@@ -31570,7 +31610,7 @@
       "labels": [],
       "body": "The current draft is compatible with vdaf-00, and there will likely be\r\nAPI-breaking changes in vdaf-01. For planned changes see\r\nhttps://mailarchive.ietf.org/arch/msg/cfrg/Fvd_m64V9bC4VVJm2Zsuwr441mM/.",
       "createdAt": "2022-05-13T16:26:57Z",
-      "updatedAt": "2022-05-13T17:49:02Z",
+      "updatedAt": "2022-05-18T18:33:03Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "149c8c08a7ae7ad9f75ccbd14c815d38fd587bbe",
@@ -31588,6 +31628,13 @@
           "body": "@divergentdave, done (nice catch).",
           "createdAt": "2022-05-13T16:35:05Z",
           "updatedAt": "2022-05-13T16:35:05Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> No objections from me, but we could also just wait until VDAF-01 is out and then pin \ud83e\udd37\r\n\r\nThe big task remaining for VDAF-01 is finishing Poplar1, which likely won't happen for several weeks. I suppose we could cut VDAF-01 w/o Poplar1 and save it for VDAF-02? ",
+          "createdAt": "2022-05-18T18:33:03Z",
+          "updatedAt": "2022-05-18T18:33:03Z"
         }
       ],
       "reviews": [
@@ -31615,6 +31662,19 @@
           "body": "",
           "createdAt": "2022-05-13T17:49:02Z",
           "updatedAt": "2022-05-13T17:49:02Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs46QmTg",
+          "commit": {
+            "abbreviatedOid": "944454b"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "No objections from me, but we could also just wait until VDAF-01 is out and then pin \ud83e\udd37 ",
+          "createdAt": "2022-05-18T18:28:53Z",
+          "updatedAt": "2022-05-18T18:28:53Z",
           "comments": []
         }
       ]
@@ -31690,24 +31750,26 @@
       "id": "PR_kwDOFEJYQs43zQnV",
       "title": "Update repository reference",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/252",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2022-05-13T18:09:20Z",
-      "updatedAt": "2022-05-16T16:22:57Z",
+      "updatedAt": "2022-05-18T18:04:35Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "85c42e767b3474c2aabfba01a03a9ac560b2bb55",
+      "baseRefOid": "c9a07318214c3503aab30d1d1ea5afa5655f47c5",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/update-repo",
-      "headRefOid": "408cd8eb0066176456422caab28442e5283ba82c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "f63a981d835ce4cb51d4dedb15effc2321435045",
+      "closedAt": "2022-05-18T18:04:35Z",
+      "mergedAt": "2022-05-18T18:04:35Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "a9d046da0b4a7b8b8b80658e68572dc8ecdf74c5"
+      },
       "comments": [],
       "reviews": [
         {
@@ -31729,6 +31791,19 @@
               "updatedAt": "2022-05-16T16:00:52Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs46PjnC",
+          "commit": {
+            "abbreviatedOid": "f63a981"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-18T15:15:12Z",
+          "updatedAt": "2022-05-18T15:15:12Z",
+          "comments": []
         }
       ]
     },
@@ -31799,6 +31874,150 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 256,
+      "id": "PR_kwDOFEJYQs44B41Y",
+      "title": "Fix AggregateShareReq",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/256",
+      "state": "MERGED",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "AggregateShareReq should have an aggregation parameter field instead of\r\naggregation job ID.",
+      "createdAt": "2022-05-18T14:02:45Z",
+      "updatedAt": "2022-05-18T14:27:59Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "85c42e767b3474c2aabfba01a03a9ac560b2bb55",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/agg-share-req-agg-param",
+      "headRefOid": "2d6a14d259c2e86f4de4155e56977f1ba8e77e8f",
+      "closedAt": "2022-05-18T14:27:59Z",
+      "mergedAt": "2022-05-18T14:27:59Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "01571a49c2ce5db69784724c5a0deb3f6d79e82d"
+      },
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks @simon-friedberger for spotting this!",
+          "createdAt": "2022-05-18T14:04:40Z",
+          "updatedAt": "2022-05-18T14:04:40Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs46PDqg",
+          "commit": {
+            "abbreviatedOid": "2d6a14d"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-18T14:03:37Z",
+          "updatedAt": "2022-05-18T14:03:37Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs46PFzl",
+          "commit": {
+            "abbreviatedOid": "2d6a14d"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-18T14:07:14Z",
+          "updatedAt": "2022-05-18T14:07:14Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 257,
+      "id": "PR_kwDOFEJYQs44CD05",
+      "title": "Remove references to helper state",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/257",
+      "state": "MERGED",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This is a follow-up to #232, removing a few dangling references to the helper state blob.",
+      "createdAt": "2022-05-18T14:38:13Z",
+      "updatedAt": "2022-05-18T15:09:23Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "01571a49c2ce5db69784724c5a0deb3f6d79e82d",
+      "headRepository": "divergentdave/ppm-specification",
+      "headRefName": "helper-state-cleanup",
+      "headRefOid": "17d5b4d09d4eba0f12359e26594ece92658d6644",
+      "closedAt": "2022-05-18T15:02:31Z",
+      "mergedAt": "2022-05-18T15:02:31Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "c9a07318214c3503aab30d1d1ea5afa5655f47c5"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs46Pdff",
+          "commit": {
+            "abbreviatedOid": "17d5b4d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-18T15:01:04Z",
+          "updatedAt": "2022-05-18T15:01:04Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs46Pd5d",
+          "commit": {
+            "abbreviatedOid": "17d5b4d"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-18T15:02:03Z",
+          "updatedAt": "2022-05-18T15:02:03Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 258,
+      "id": "PR_kwDOFEJYQs44DEmK",
+      "title": "Fix section reference in Anti-replay section",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/258",
+      "state": "OPEN",
+      "author": "divergentdave",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This fixes a reference that was pointing at the wrong section. The behavior relating to `ReportShareError.report-replayed` is under \"Input Share Validation\".",
+      "createdAt": "2022-05-18T19:06:14Z",
+      "updatedAt": "2022-05-18T19:06:15Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "a9d046da0b4a7b8b8b80658e68572dc8ecdf74c5",
+      "headRepository": "divergentdave/ppm-specification",
+      "headRefName": "patch-1",
+      "headRefOid": "7cb1f0ca652374cc729da5f6f082179ad58d9fa1",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
