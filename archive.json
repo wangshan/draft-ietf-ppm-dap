@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-19T01:24:37.313359+00:00",
+  "timestamp": "2022-05-22T01:10:58.939083+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4102,7 +4102,7 @@
       "id": "I_kwDOFEJYQs5IIsg9",
       "title": "Usage of HPKE `info` and `aad` fields (was \"HPKE: do not use both application_info & AAD.\")",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/221",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "BranLwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -4111,8 +4111,8 @@
       "labels": [],
       "body": "Per https://www.rfc-editor.org/rfc/rfc9180.pdf section 8.1:\r\n> Applications that only use the single-shot APIs described in Section 6 should use the Setup info parameter for specifying auxiliary authenticated information. Implementations which only expose single-shot APIs should not allow applications to use both Setup info and Context aad or exporter_context auxiliary information parameters.\r\n\r\n\r\nPPM effectively uses the single-shot APIs; we should consider refactoring PPM's usage of HPKE to use only one of application_info & AAD. Following the advice of the HPKE RFC, we would want to use application_info.\r\n\r\nThis would permit slightly simpler implementations. I am not sure how much it would simplify the HPKE computations.",
       "createdAt": "2022-04-20T21:41:18Z",
-      "updatedAt": "2022-05-13T16:54:30Z",
-      "closedAt": null,
+      "updatedAt": "2022-05-21T10:57:14Z",
+      "closedAt": "2022-05-21T10:57:14Z",
       "comments": [
         {
           "author": "tgeoghegan",
@@ -4428,6 +4428,82 @@
       "updatedAt": "2022-05-18T19:58:46Z",
       "closedAt": null,
       "comments": []
+    },
+    {
+      "number": 260,
+      "id": "I_kwDOFEJYQs5KCmAM",
+      "title": "Clarify the domain in which aggregation job IDs must be unique",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/260",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "The current DAP specification says (section 4.3.1.1):\r\n```\r\nGenerate a fresh AggregationJobID. This ID MUST be unique within the context of the corresponding DAP task.\r\n```\r\n...which implies that the domain of uniqueness for aggregation job IDs is at least as large as all aggregation job IDs for the related task.\r\n\r\nBut then, the aggregate continue request definition is (section 4.3.2.1):\r\n```\r\nstruct {\r\n  AggregationJobID job_id;\r\n  PrepareStep prepare_shares<1..2^16-1>;\r\n} AggregateContinueReq;\r\n```\r\n... which implies that aggregation job IDs must be unique over all aggregation jobs (on any task), since the `task_id` is omitted.\r\n\r\nDepending on intent, I suggest one of the following edits:\r\n* Update section 4.3.1.1 to state that aggregation job IDs must be unique over all aggregation jobs (for any task the aggregator knows about).\r\n* Update section 4.3.2.1 to include a `TaskId` in the `AggregateContinueReq` message.",
+      "createdAt": "2022-05-19T18:56:41Z",
+      "updatedAt": "2022-05-19T22:01:22Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "My two cents: I really like keeping separate tasks isolated as much as possible, so I like the idea of requiring aggregation job IDs to be unique only over the domain of aggregation jobs for the related task. OTOH, this would require sending extra bytes with every `AggregateContinueReq`, which folks certainly might find unpalatable.\r\n\r\nedit: If we make aggregation job IDs globally unique, this would also make aggregation jobs the only thing other than tasks that are not identified per-task -- client reports are effectively identified by (task_id, report_nonce) currently. IMO this is another point in favor of explicitly maintaining that aggregation job IDs are unique only up to the task. This might be especially important for \"large\" implementations that may wish to shard over tasks -- if aggregation job IDs are globally unique, all shards must know about all aggregation job IDs, even those pertaining to tasks they don't know about. (edit: or, to put it another way, a sharded-by-task implementation would have to have a component that knows how to map aggregation job IDs to task IDs, which would require knowledge of all aggregation job IDs & their related tasks; IMO it'd be nicer if we shaped things so that implementations can shard over _something_, and sharding by task makes sense to me)",
+          "createdAt": "2022-05-19T19:01:19Z",
+          "updatedAt": "2022-05-19T22:01:22Z"
+        }
+      ]
+    },
+    {
+      "number": 261,
+      "id": "I_kwDOFEJYQs5KDCyc",
+      "title": "Aggregate{Initialize,Continue}Resp should not include the aggregation job ID",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/261",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "`Aggregate{Initialize,Continue}Resp` both include the relevant aggregation job ID; but in both cases, the `Aggregate{Initialize,Continue}Req` includes the aggregation job ID, the response will always reflect the aggregation job ID that was included in the request, and a request is always paired with a response by means of being part of the same HTTP request/response. This looks to be unnecessary communication overhead--if that's accurate, I think we can just drop these fields.",
+      "createdAt": "2022-05-19T20:49:20Z",
+      "updatedAt": "2022-05-19T21:55:36Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I wonder if a better design is to pull the aggregation job ID out of the DAP structure and make it a query parameter for the URL, e.g., `[aggregator]/aggregate?aggregate-job-id=...`, for two reasons: (1) the URL isn't echoed in the response, achieving the desired property of this change, and (2) this avoids any caching headaches, since different each aggregate init request would have a different URL. Thoughts?",
+          "createdAt": "2022-05-19T21:18:34Z",
+          "updatedAt": "2022-05-19T21:18:34Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think caching is a non-issue, because requests to `/aggregate` are POSTs, and POSTs are not required to be idempotent (hence not cacheable). That said I kind of like the idea of hoisting the aggregation job ID into the request URL. However, I think it'd be appropriate to put the aggregation job ID in the path (i.e., `[aggregator]/aggregation_jobs/<base64urlencoded job ID>`), since the job ID is part of the resource being acted on.\r\n\r\nAt that point, I think we might want to revisit all the DAP endpoints. Currently, we have `/upload`, `/aggregate` and `/collect`, which are all verbs. HTTP urges us to think about [resources](https://datatracker.ietf.org/doc/html/rfc7231#section-2), which ought to be nouns, and we should let the HTTP method be the verb.\r\n\r\nSo instead of POST to `[leader]/upload`, maybe we want POST to `[leader]/reports/<report_nonce>`, and instead of `[helper]/aggregate`, we want `[helper]/aggregation_jobs/<aggregation job ID>` and so on. However all of that is far beyond the scope of this issue.",
+          "createdAt": "2022-05-19T21:50:26Z",
+          "updatedAt": "2022-05-19T21:50:26Z"
+        },
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm not so sure about the proposed benefit to caching -- the relevant requests are `POST`s, so they shouldn't be cached. And if we ever encounter an HTTP client that does cache `POST` requests, I don't including the IDs as query params will help: the `/aggregate` endpoint is used for all aggregation messages (initialization and continue), so we'd still run into potential caching headaches on aggregate continue requests since they'd be using identical URLs to the aggregate initialization requests.\r\n\r\nThat said, perhaps this change is desirable from the perspective of fitting HTTP semantics more closely. A few thoughts:\r\n1. Almost all messages include all relevant data in the HTTP body, rather than using the query parameter. We'd probably want to decide on a rule for what goes into query parameters vs the body, and apply it to all messages for consistency.\r\n2. The one place in the DAP spec that doesn't place all request information in the body is the `/hpke_config` request, which places the task ID as a query parameter. This is done because we want to use HTTP caching for these requests, which implies using `GET`, and `GET` can't reliably transmit a body. (IMO, if/when the HTTP `QUERY` verb is standardized+practically usable, it would be preferable to move the `/hpke_config` parameters to the request body, for consistency.)\r\n3. For aggregate initialization/continue messages specifically, IMO we'd want to move the task ID to the query parameter, too, since the task ID is effectively another part of the aggregation job identifier. (...depending on how the discussion in #260 goes.)\r\n4. Placing this ID in the body allows it to be transmitted raw/unencoded. Placing the ID in the query parameters would require some URL-safe encoding, such as base64url, which would cost a small but non-negligible number of bytes.\r\n\r\nAll that said, IMO I kinda like keeping all of the request parameters together in one place, and IMO the body is a slightly nicer place to put the request parameters than the URL query parameter (since we can transmit with whatever encoding we want, saving a few bytes).",
+          "createdAt": "2022-05-19T21:52:26Z",
+          "updatedAt": "2022-05-19T21:52:26Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Yeah, sorry, I forgot these were POSTs. ",
+          "createdAt": "2022-05-19T21:53:01Z",
+          "updatedAt": "2022-05-19T21:53:01Z"
+        },
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I like Tim's idea of making the IDs part of the URL path if we move the IDs out of the request body, but also agree that a larger refactoring of the URL layout is beyond the scope of this issue.",
+          "createdAt": "2022-05-19T21:55:36Z",
+          "updatedAt": "2022-05-19T21:55:36Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -31684,24 +31760,26 @@
       "id": "PR_kwDOFEJYQs43zDTN",
       "title": "Revise usage of HPKE encryption (take two).",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/251",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "BranLwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Specifically:\r\n  * Specify use of the \"one-shot\" HPKE APIs defined in RFC9180,\r\n    replacing equivalent use of the \"multi-shot\" APIs. (This change is\r\n    intended to be a clarification, not a functional change.)\r\n  * Move the task_id parameter from the \"info\" parameter to the \"aad\"\r\n    parameter. This is intended to protect against\r\n    key-commitment-related attacks[1].) This is a functional change.\r\n  * Clarify that the HpkeCiphertext.enc field is an encapsulated key,\r\n    rather than an encryption context. (This is a clarification, not a\r\n    functional change.)\r\n\r\nThis is a second copy of a previous PR (#249) which was merged too\r\nhastily, and then reverted. There are no changes from that PR.\r\n\r\n[1] See discussion in #221.\r\n\r\nCloses #221.",
       "createdAt": "2022-05-13T16:53:01Z",
-      "updatedAt": "2022-05-14T12:10:10Z",
+      "updatedAt": "2022-05-21T10:57:15Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "0f507171aaad51c9eefccd1075df9874a1a8f7a8",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "update-hpke-usage-redux",
       "headRefOid": "fb89e349ba00c180d3de1f6fb59c3b38bc89bd14",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2022-05-21T10:57:14Z",
+      "mergedAt": "2022-05-21T10:57:14Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "06ac0f17aafb1dc3f9f007dd30f042d64283abd8"
+      },
       "comments": [],
       "reviews": [
         {
@@ -31998,20 +32076,88 @@
       "id": "PR_kwDOFEJYQs44DEmK",
       "title": "Fix section reference in Anti-replay section",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/258",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This fixes a reference that was pointing at the wrong section. The behavior relating to `ReportShareError.report-replayed` is under \"Input Share Validation\".",
       "createdAt": "2022-05-18T19:06:14Z",
-      "updatedAt": "2022-05-18T19:06:15Z",
+      "updatedAt": "2022-05-19T01:27:11Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "a9d046da0b4a7b8b8b80658e68572dc8ecdf74c5",
       "headRepository": "divergentdave/ppm-specification",
       "headRefName": "patch-1",
       "headRefOid": "7cb1f0ca652374cc729da5f6f082179ad58d9fa1",
+      "closedAt": "2022-05-19T01:27:11Z",
+      "mergedAt": "2022-05-19T01:27:11Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "14ff0679a9781cd13a95486b5b199e9c8c508087"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs46SFER",
+          "commit": {
+            "abbreviatedOid": "7cb1f0c"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-19T01:27:02Z",
+          "updatedAt": "2022-05-19T01:27:02Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 262,
+      "id": "PR_kwDOFEJYQs44JhD8",
+      "title": "Drop job_id from Aggregate{Initialize,Continue}Resp.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/262",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Should this be communicated with the WG mailing list?\r\n\r\nCloses #261.",
+      "createdAt": "2022-05-19T21:07:23Z",
+      "updatedAt": "2022-05-19T21:17:42Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "14ff0679a9781cd13a95486b5b199e9c8c508087",
+      "headRepository": "BranLwyd/draft-ietf-ppm-dap",
+      "headRefName": "drop-job-id-in-agg-resps",
+      "headRefOid": "0e2da079a0289218dd33cec4c5fbbfd12350c86b",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 263,
+      "id": "PR_kwDOFEJYQs44JjgE",
+      "title": "Include task_id in AggregateContinueReq.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/263",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "See https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/260 for the\r\nreasoning behind this change. In short, this keeps aggregation job IDs\r\nscoped to be unique-per-task rather than universally-unique.\r\n\r\nNote this isn't the only possible solution -- I'm opinionatedly sending this PR, if the discussion on #260 leads to a different conclusion, I'll update the PR accordingly.\r\n\r\nShould this change be communicated with the WG mailing list?\r\n\r\nCloses #260.",
+      "createdAt": "2022-05-19T21:16:43Z",
+      "updatedAt": "2022-05-19T21:24:24Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "14ff0679a9781cd13a95486b5b199e9c8c508087",
+      "headRepository": "BranLwyd/draft-ietf-ppm-dap",
+      "headRefName": "agg-continue-include-task",
+      "headRefOid": "6b3f8a0588bf67a2bfe428e6afc5285bc7d3120e",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
