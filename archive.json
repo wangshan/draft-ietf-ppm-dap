@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-22T01:10:58.939083+00:00",
+  "timestamp": "2022-05-24T01:19:16.893951+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4504,6 +4504,24 @@
           "updatedAt": "2022-05-19T21:55:36Z"
         }
       ]
+    },
+    {
+      "number": 264,
+      "id": "I_kwDOFEJYQs5KP_-i",
+      "title": "Consider unifying the top-level media type used for DAP messages.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/264",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "BranLwyd"
+      ],
+      "labels": [],
+      "body": "Currently, DAP uses the following media types (defined in section 7.1):\r\n* `application/dap-hpke-config`\r\n* `message/dap-report`\r\n* `message/dap-aggregate-initialize-req`\r\n* `message/dap-aggregate-initialize-resp`\r\n* `message/dap-aggregate-continue-req`\r\n* `message/dap-aggregate-continue-resp`\r\n* `message/dap-aggregate-share-req`\r\n* `message/dap-aggregate-share-resp`\r\n* `message/dap-collect-req`\r\n* `message/dap-collect-resp`\r\n\r\nNote that the first uses the `application` top-level type, while the remainder use the `message` top-level type. For consistency, I suggest we use the same top-level type for all messages.\r\n\r\nWhich type is more appropriate? Per [RFC 2046](https://www.rfc-editor.org/rfc/rfc2046.html):\r\n* `application` is for \"either uninterpreted binary data or information to be processed by an application\"\r\n* `message` is for \"an encapsulated message\"; all of the motivating examples (see section 5.2) are around encaspulating one message format inside another, or fragmenting a message into multiple chunks. [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838.html) provides further guidance that \"multipart and message are composite types; that is, they provide a means of encapsulating zero or more objects, each one a separate media type.\"\r\n\r\nGiven that DAP messages are not a method of encapsulating a message of a different type, I suggest that `application` is the more appropriate top-level type to use. This is also supported by the rather large number of `application` media types vs the relatively tiny number of `message` media types in [IANA's media types list](https://www.iana.org/assignments/media-types/media-types.xhtml).\r\n\r\n(this issue fell out of discussion on https://github.com/divviup/janus/pull/183)",
+      "createdAt": "2022-05-23T21:20:22Z",
+      "updatedAt": "2022-05-23T21:27:17Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -32158,6 +32176,32 @@
       "headRepository": "BranLwyd/draft-ietf-ppm-dap",
       "headRefName": "agg-continue-include-task",
       "headRefOid": "6b3f8a0588bf67a2bfe428e6afc5285bc7d3120e",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 265,
+      "id": "PR_kwDOFEJYQs44Umtp",
+      "title": "Switch all messages from the \"media\" to the \"application\" media type.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/265",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #264. (opinionatedly: please see discussion on that issue)",
+      "createdAt": "2022-05-23T21:27:33Z",
+      "updatedAt": "2022-05-23T21:28:22Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "06ac0f17aafb1dc3f9f007dd30f042d64283abd8",
+      "headRepository": "BranLwyd/draft-ietf-ppm-dap",
+      "headRefName": "media-type-application",
+      "headRefOid": "6e971da0655d8333d3cbd978dcace5ba8997587c",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
