@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-24T01:19:16.893951+00:00",
+  "timestamp": "2022-05-26T01:22:22.234882+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4441,7 +4441,7 @@
       "labels": [],
       "body": "The current DAP specification says (section 4.3.1.1):\r\n```\r\nGenerate a fresh AggregationJobID. This ID MUST be unique within the context of the corresponding DAP task.\r\n```\r\n...which implies that the domain of uniqueness for aggregation job IDs is at least as large as all aggregation job IDs for the related task.\r\n\r\nBut then, the aggregate continue request definition is (section 4.3.2.1):\r\n```\r\nstruct {\r\n  AggregationJobID job_id;\r\n  PrepareStep prepare_shares<1..2^16-1>;\r\n} AggregateContinueReq;\r\n```\r\n... which implies that aggregation job IDs must be unique over all aggregation jobs (on any task), since the `task_id` is omitted.\r\n\r\nDepending on intent, I suggest one of the following edits:\r\n* Update section 4.3.1.1 to state that aggregation job IDs must be unique over all aggregation jobs (for any task the aggregator knows about).\r\n* Update section 4.3.2.1 to include a `TaskId` in the `AggregateContinueReq` message.",
       "createdAt": "2022-05-19T18:56:41Z",
-      "updatedAt": "2022-05-19T22:01:22Z",
+      "updatedAt": "2022-05-24T18:28:42Z",
       "closedAt": null,
       "comments": [
         {
@@ -4450,6 +4450,13 @@
           "body": "My two cents: I really like keeping separate tasks isolated as much as possible, so I like the idea of requiring aggregation job IDs to be unique only over the domain of aggregation jobs for the related task. OTOH, this would require sending extra bytes with every `AggregateContinueReq`, which folks certainly might find unpalatable.\r\n\r\nedit: If we make aggregation job IDs globally unique, this would also make aggregation jobs the only thing other than tasks that are not identified per-task -- client reports are effectively identified by (task_id, report_nonce) currently. IMO this is another point in favor of explicitly maintaining that aggregation job IDs are unique only up to the task. This might be especially important for \"large\" implementations that may wish to shard over tasks -- if aggregation job IDs are globally unique, all shards must know about all aggregation job IDs, even those pertaining to tasks they don't know about. (edit: or, to put it another way, a sharded-by-task implementation would have to have a component that knows how to map aggregation job IDs to task IDs, which would require knowledge of all aggregation job IDs & their related tasks; IMO it'd be nicer if we shaped things so that implementations can shard over _something_, and sharding by task makes sense to me)",
           "createdAt": "2022-05-19T19:01:19Z",
           "updatedAt": "2022-05-19T22:01:22Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree this needs to be fixed and I prefer your second suggestion.",
+          "createdAt": "2022-05-24T18:28:41Z",
+          "updatedAt": "2022-05-24T18:28:41Z"
         }
       ]
     },
@@ -4519,9 +4526,24 @@
       "labels": [],
       "body": "Currently, DAP uses the following media types (defined in section 7.1):\r\n* `application/dap-hpke-config`\r\n* `message/dap-report`\r\n* `message/dap-aggregate-initialize-req`\r\n* `message/dap-aggregate-initialize-resp`\r\n* `message/dap-aggregate-continue-req`\r\n* `message/dap-aggregate-continue-resp`\r\n* `message/dap-aggregate-share-req`\r\n* `message/dap-aggregate-share-resp`\r\n* `message/dap-collect-req`\r\n* `message/dap-collect-resp`\r\n\r\nNote that the first uses the `application` top-level type, while the remainder use the `message` top-level type. For consistency, I suggest we use the same top-level type for all messages.\r\n\r\nWhich type is more appropriate? Per [RFC 2046](https://www.rfc-editor.org/rfc/rfc2046.html):\r\n* `application` is for \"either uninterpreted binary data or information to be processed by an application\"\r\n* `message` is for \"an encapsulated message\"; all of the motivating examples (see section 5.2) are around encaspulating one message format inside another, or fragmenting a message into multiple chunks. [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838.html) provides further guidance that \"multipart and message are composite types; that is, they provide a means of encapsulating zero or more objects, each one a separate media type.\"\r\n\r\nGiven that DAP messages are not a method of encapsulating a message of a different type, I suggest that `application` is the more appropriate top-level type to use. This is also supported by the rather large number of `application` media types vs the relatively tiny number of `message` media types in [IANA's media types list](https://www.iana.org/assignments/media-types/media-types.xhtml).\r\n\r\n(this issue fell out of discussion on https://github.com/divviup/janus/pull/183)",
       "createdAt": "2022-05-23T21:20:22Z",
-      "updatedAt": "2022-05-23T21:27:17Z",
+      "updatedAt": "2022-05-24T19:03:49Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Agreed, `application` seems better.",
+          "createdAt": "2022-05-24T18:30:36Z",
+          "updatedAt": "2022-05-24T18:30:36Z"
+        },
+        {
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The `message/` types were chosen in PR #128 on a tentative basis, and marked with \"OPEN ISSUE: Solicit review of these allocations from domain experts.\"\r\n\r\nBased on the encapsulation reasoning, I agree that `application` be most appropriate for our media types.",
+          "createdAt": "2022-05-24T19:03:49Z",
+          "updatedAt": "2022-05-24T19:03:49Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -31697,24 +31719,26 @@
       "id": "PR_kwDOFEJYQs43y-i3",
       "title": "Lock spec to draft-irtf-cfrg-vdaf-00",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/250",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The current draft is compatible with vdaf-00, and there will likely be\r\nAPI-breaking changes in vdaf-01. For planned changes see\r\nhttps://mailarchive.ietf.org/arch/msg/cfrg/Fvd_m64V9bC4VVJm2Zsuwr441mM/.",
       "createdAt": "2022-05-13T16:26:57Z",
-      "updatedAt": "2022-05-18T18:33:03Z",
+      "updatedAt": "2022-05-24T22:41:20Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "149c8c08a7ae7ad9f75ccbd14c815d38fd587bbe",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/vdaf-draft",
       "headRefOid": "944454bc26cf6e29d821aeced8014181726b26c0",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2022-05-24T22:41:20Z",
+      "mergedAt": "2022-05-24T22:41:20Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "68c2a0c98fcf7880fc1f3924d043f2ea77cc6e16"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -31729,6 +31753,13 @@
           "body": "> No objections from me, but we could also just wait until VDAF-01 is out and then pin \ud83e\udd37\r\n\r\nThe big task remaining for VDAF-01 is finishing Poplar1, which likely won't happen for several weeks. I suppose we could cut VDAF-01 w/o Poplar1 and save it for VDAF-02? ",
           "createdAt": "2022-05-18T18:33:03Z",
           "updatedAt": "2022-05-18T18:33:03Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm going to merge this now, it'll be easy enough to point to the next draft once we're ready.",
+          "createdAt": "2022-05-24T22:41:11Z",
+          "updatedAt": "2022-05-24T22:41:11Z"
         }
       ],
       "reviews": [
@@ -32143,7 +32174,7 @@
       "labels": [],
       "body": "Should this be communicated with the WG mailing list?\r\n\r\nCloses #261.",
       "createdAt": "2022-05-19T21:07:23Z",
-      "updatedAt": "2022-05-19T21:17:42Z",
+      "updatedAt": "2022-05-24T18:29:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "14ff0679a9781cd13a95486b5b199e9c8c508087",
@@ -32155,7 +32186,21 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs46oc_p",
+          "commit": {
+            "abbreviatedOid": "0e2da07"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-24T18:29:26Z",
+          "updatedAt": "2022-05-24T18:29:26Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 263,
@@ -32169,7 +32214,7 @@
       "labels": [],
       "body": "See https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/260 for the\r\nreasoning behind this change. In short, this keeps aggregation job IDs\r\nscoped to be unique-per-task rather than universally-unique.\r\n\r\nNote this isn't the only possible solution -- I'm opinionatedly sending this PR, if the discussion on #260 leads to a different conclusion, I'll update the PR accordingly.\r\n\r\nShould this change be communicated with the WG mailing list?\r\n\r\nCloses #260.",
       "createdAt": "2022-05-19T21:16:43Z",
-      "updatedAt": "2022-05-19T21:24:24Z",
+      "updatedAt": "2022-05-24T18:28:53Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "14ff0679a9781cd13a95486b5b199e9c8c508087",
@@ -32181,12 +32226,26 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs46oc2m",
+          "commit": {
+            "abbreviatedOid": "6b3f8a0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-24T18:28:53Z",
+          "updatedAt": "2022-05-24T18:28:53Z",
+          "comments": []
+        }
+      ]
     },
     {
       "number": 265,
       "id": "PR_kwDOFEJYQs44Umtp",
-      "title": "Switch all messages from the \"media\" to the \"application\" media type.",
+      "title": "Switch all messages from the \"message\" to the \"application\" media type.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/265",
       "state": "OPEN",
       "author": "BranLwyd",
@@ -32195,7 +32254,7 @@
       "labels": [],
       "body": "Closes #264. (opinionatedly: please see discussion on that issue)",
       "createdAt": "2022-05-23T21:27:33Z",
-      "updatedAt": "2022-05-23T21:28:22Z",
+      "updatedAt": "2022-05-24T19:04:27Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "06ac0f17aafb1dc3f9f007dd30f042d64283abd8",
@@ -32207,7 +32266,34 @@
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs46odpD",
+          "commit": {
+            "abbreviatedOid": "6e971da"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Approving based on the text quoted by @BranLwyd in the linked issue. It would be great to get feedback from folks who have more experience working on HTTP-based applications.",
+          "createdAt": "2022-05-24T18:31:45Z",
+          "updatedAt": "2022-05-24T18:31:45Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs46omv3",
+          "commit": {
+            "abbreviatedOid": "6e971da"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-05-24T19:04:27Z",
+          "updatedAt": "2022-05-24T19:04:27Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
