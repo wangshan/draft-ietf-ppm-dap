@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-26T01:22:22.234882+00:00",
+  "timestamp": "2022-05-29T01:19:22.461463+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -57,6 +57,11 @@
       "name": "editorial",
       "description": "The issue raised is purely editorial (i.e., doesn't impact implementations).",
       "color": "C2E0C6"
+    },
+    {
+      "name": "draft-01",
+      "description": "",
+      "color": "bfdadc"
     }
   ],
   "issues": [
@@ -4438,10 +4443,12 @@
       "author": "BranLwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-01"
+      ],
       "body": "The current DAP specification says (section 4.3.1.1):\r\n```\r\nGenerate a fresh AggregationJobID. This ID MUST be unique within the context of the corresponding DAP task.\r\n```\r\n...which implies that the domain of uniqueness for aggregation job IDs is at least as large as all aggregation job IDs for the related task.\r\n\r\nBut then, the aggregate continue request definition is (section 4.3.2.1):\r\n```\r\nstruct {\r\n  AggregationJobID job_id;\r\n  PrepareStep prepare_shares<1..2^16-1>;\r\n} AggregateContinueReq;\r\n```\r\n... which implies that aggregation job IDs must be unique over all aggregation jobs (on any task), since the `task_id` is omitted.\r\n\r\nDepending on intent, I suggest one of the following edits:\r\n* Update section 4.3.1.1 to state that aggregation job IDs must be unique over all aggregation jobs (for any task the aggregator knows about).\r\n* Update section 4.3.2.1 to include a `TaskId` in the `AggregateContinueReq` message.",
       "createdAt": "2022-05-19T18:56:41Z",
-      "updatedAt": "2022-05-24T18:28:42Z",
+      "updatedAt": "2022-05-26T16:20:39Z",
       "closedAt": null,
       "comments": [
         {
@@ -4469,10 +4476,12 @@
       "author": "BranLwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-01"
+      ],
       "body": "`Aggregate{Initialize,Continue}Resp` both include the relevant aggregation job ID; but in both cases, the `Aggregate{Initialize,Continue}Req` includes the aggregation job ID, the response will always reflect the aggregation job ID that was included in the request, and a request is always paired with a response by means of being part of the same HTTP request/response. This looks to be unnecessary communication overhead--if that's accurate, I think we can just drop these fields.",
       "createdAt": "2022-05-19T20:49:20Z",
-      "updatedAt": "2022-05-19T21:55:36Z",
+      "updatedAt": "2022-05-26T16:20:03Z",
       "closedAt": null,
       "comments": [
         {
@@ -4523,10 +4532,12 @@
       "assignees": [
         "BranLwyd"
       ],
-      "labels": [],
+      "labels": [
+        "draft-01"
+      ],
       "body": "Currently, DAP uses the following media types (defined in section 7.1):\r\n* `application/dap-hpke-config`\r\n* `message/dap-report`\r\n* `message/dap-aggregate-initialize-req`\r\n* `message/dap-aggregate-initialize-resp`\r\n* `message/dap-aggregate-continue-req`\r\n* `message/dap-aggregate-continue-resp`\r\n* `message/dap-aggregate-share-req`\r\n* `message/dap-aggregate-share-resp`\r\n* `message/dap-collect-req`\r\n* `message/dap-collect-resp`\r\n\r\nNote that the first uses the `application` top-level type, while the remainder use the `message` top-level type. For consistency, I suggest we use the same top-level type for all messages.\r\n\r\nWhich type is more appropriate? Per [RFC 2046](https://www.rfc-editor.org/rfc/rfc2046.html):\r\n* `application` is for \"either uninterpreted binary data or information to be processed by an application\"\r\n* `message` is for \"an encapsulated message\"; all of the motivating examples (see section 5.2) are around encaspulating one message format inside another, or fragmenting a message into multiple chunks. [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838.html) provides further guidance that \"multipart and message are composite types; that is, they provide a means of encapsulating zero or more objects, each one a separate media type.\"\r\n\r\nGiven that DAP messages are not a method of encapsulating a message of a different type, I suggest that `application` is the more appropriate top-level type to use. This is also supported by the rather large number of `application` media types vs the relatively tiny number of `message` media types in [IANA's media types list](https://www.iana.org/assignments/media-types/media-types.xhtml).\r\n\r\n(this issue fell out of discussion on https://github.com/divviup/janus/pull/183)",
       "createdAt": "2022-05-23T21:20:22Z",
-      "updatedAt": "2022-05-24T19:03:49Z",
+      "updatedAt": "2022-05-26T16:20:20Z",
       "closedAt": null,
       "comments": [
         {
@@ -4544,6 +4555,24 @@
           "updatedAt": "2022-05-24T19:03:49Z"
         }
       ]
+    },
+    {
+      "number": 266,
+      "id": "I_kwDOFEJYQs5KfhBk",
+      "title": "Align spec with vdaf-01",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/266",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-01"
+      ],
+      "body": "The next VDAF draft is out. It includes some minor changes that we'll need to adopt here.\r\nhttps://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/\r\n",
+      "createdAt": "2022-05-26T16:19:19Z",
+      "updatedAt": "2022-05-26T16:19:52Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
@@ -32172,9 +32201,9 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "Should this be communicated with the WG mailing list?\r\n\r\nCloses #261.",
+      "body": "Closes #261. (see that issue for justification of this change)",
       "createdAt": "2022-05-19T21:07:23Z",
-      "updatedAt": "2022-05-24T18:29:26Z",
+      "updatedAt": "2022-05-28T00:47:16Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "14ff0679a9781cd13a95486b5b199e9c8c508087",
@@ -32212,9 +32241,9 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "See https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/260 for the\r\nreasoning behind this change. In short, this keeps aggregation job IDs\r\nscoped to be unique-per-task rather than universally-unique.\r\n\r\nNote this isn't the only possible solution -- I'm opinionatedly sending this PR, if the discussion on #260 leads to a different conclusion, I'll update the PR accordingly.\r\n\r\nShould this change be communicated with the WG mailing list?\r\n\r\nCloses #260.",
+      "body": "See https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/260 for the\r\nreasoning behind this change. In short, this keeps aggregation job IDs\r\nscoped to be unique-per-task rather than universally-unique.\r\n\r\nNote this isn't the only possible solution -- I'm opinionatedly sending this PR, if the discussion on #260 leads to a different conclusion, I'll update the PR accordingly.\r\n\r\nCloses #260.",
       "createdAt": "2022-05-19T21:16:43Z",
-      "updatedAt": "2022-05-24T18:28:53Z",
+      "updatedAt": "2022-05-28T00:46:48Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "14ff0679a9781cd13a95486b5b199e9c8c508087",
