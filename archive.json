@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-29T01:19:22.461463+00:00",
+  "timestamp": "2022-05-31T01:17:54.818489+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4571,6 +4571,22 @@
       "body": "The next VDAF draft is out. It includes some minor changes that we'll need to adopt here.\r\nhttps://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/01/\r\n",
       "createdAt": "2022-05-26T16:19:19Z",
       "updatedAt": "2022-05-26T16:19:52Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 267,
+      "id": "I_kwDOFEJYQs5Kpdhx",
+      "title": "Specify handling of agg_param",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/267",
+      "state": "OPEN",
+      "author": "simon-friedberger",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "There is an agg_param in AggregateInitializeReq and in CollectReq and in AggregateShareReq.\r\nIIUC CollectReq.agg_param may need to be forwarded as AggregateInitializeReq.agg_param or - depending on the VDAF - later as AggregateShareReq.agg_param.\r\n\r\nISTM the logic needs to be specified to implement DAP correctly.",
+      "createdAt": "2022-05-30T08:29:30Z",
+      "updatedAt": "2022-05-30T08:29:30Z",
       "closedAt": null,
       "comments": []
     }
