@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 25 November 2022                                     Cloudflare
+Expires: 3 December 2022                                      Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                             24 May 2022
+                                                             1 June 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -29,13 +29,18 @@ Abstract
    (DAP) for privacy preserving measurement (PPM) which can be used to
    collect aggregate data without revealing any individual user's data.
 
-Discussion Venues
+About This Document
 
    This note is to be removed before publishing as an RFC.
 
+   The latest revision of this draft can be found at https://ietf-wg-
+   ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html.  Status
+   information for this document may be found at
+   https://datatracker.ietf.org/doc/draft-ietf-ppm-dap/.
+
    Discussion of this document takes place on the Privacy Preserving
-   Measurement Working Group mailing list (ppm@ietf.org), which is
-   archived at https://mailarchive.ietf.org/arch/browse/ppm/.
+   Measurement Working Group mailing list (mailto:ppm@ietf.org), which
+   is archived at https://mailarchive.ietf.org/arch/browse/ppm/.
 
    Source for this draft and an issue tracker can be found at
    https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap.
@@ -55,7 +60,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 25 November 2022.
+   This Internet-Draft will expire on 3 December 2022.
 
 Copyright Notice
 
