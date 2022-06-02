@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-05-31T01:17:54.818489+00:00",
+  "timestamp": "2022-06-02T01:21:29.411205+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -485,7 +485,7 @@
       "labels": [],
       "body": "@tlepoint pointed out that PrioV2 requires all clients to submit randomized values for the purposes of ensuring that identical inputs don't yield the same output. Basically, with some very small probability, clients flip some bits in their data to maximize aggregate utility and privacy (in terms of differential privacy bounds). [Apple's paper](https://arxiv.org/abs/2012.12803) on this topic has details. \r\n\r\nWe should probably design the system such that either clients or aggregators can inject this sort of noise. ",
       "createdAt": "2021-03-10T18:33:51Z",
-      "updatedAt": "2022-05-05T16:59:56Z",
+      "updatedAt": "2022-06-01T14:13:54Z",
       "closedAt": null,
       "comments": [
         {
@@ -515,6 +515,20 @@
           "body": "I was originally going to post this as a new issue but I think this one should suffice. Originally titled \"Optional DAP configuration that achieves differential privacy\". Apologies in advance for the wall of text, I hope it is useful to the discussion.\r\n\r\n-----\r\n\r\nDifferential privacy (DP) is a useful property of an aggregate system. Among other things, it is a mitigation against Sybil attacks that aim to violate user privacy. This is because differential privacy holds under worst-case assumptions, including when the adversary knows the contents of the entire database except for the targeted user. In other words, malicious clients submitting data to the system does not adversely affect the privacy (in this worst-case sense) of any honest user.\r\n\r\nWe should consider whether we want to specify an optional configuration in DAP which deployments can use to achieve DP output. @cjpatton mentions [here](https://github.com/ietf-wg-ppm/ppm-specification/pull/235#discussion_r865016936) it would be useful, so here are my thoughts:\r\n\r\nDP typically involves noise addition, we ought to consider two flavors, since I think both are relevant and useful to this work:\r\n\r\n## 1. Clients add noise to their input\r\n\r\nWhen clients add noise to their input, it is possible to show the system is differentially private (in the \u201clocal\u201d model) without any downstream changes in DAP or VDAF. This is a trivial result though, and does not take advantage of anything relevant to DAP.\r\n\r\nThe security model of DAP is that input is sent to the system through input shares, which eliminates any knowledge in the system of which client sent which report. I believe that, by using a similar line of argument as the [ENPA white paper](https://covid19-static.cdn-apple.com/applications/covid19/current/static/contact-tracing/pdf/ENPA_White_Paper.pdf) (section 4.5), we can show that using local noise in DAP should always achieve differential privacy in the shuffle model, without any change to the protocol (or restriction on VDAF). This yields [much stronger](https://arxiv.org/abs/2012.12803) privacy bounds than purely local DP. It will depend on the number of users contributing in a given batch, so increasing the minimum batch size should increase privacy.\r\n\r\nSide note: with some specific VDAFs, and some specific types of local noise, you could show stronger privacy bounds than shuffle DP, even if noise is only added on the client. This is similar to the case of each aggregator adding independent noise, where you consider the client to be a 1-record aggregator.\r\n\r\nSide note: If clients add noise to their input, it puts at risk the \u201cverifiable\u201d aspect of VDAF, since the input is falsey from the very start. However, we can still add noise such that the output is well-bounded, and downstream VDAFs can expect data within the expected bounds.\r\n\r\n## 2. Noise is added during aggregation\r\n\r\nThere are a couple of ways I could see specifying this. This is an example of central DP, or more specifically, distributed DP since it is done via distributed noise addition.\r\n\r\n### 2A. VDAFs add noise\r\n\r\nThe idea here is that a particular VDAF could be implemented such that noise is added to each `agg_share` independently, resulting in a noisy `agg_result` that could be shown to be differentially private. Noise should be added in such a way that agg_result has summed noise distributed according to a particular distribution that we know achieves DP (e.g. discrete laplace, etc).\r\n\r\nFor example, n aggregators adding noise distributed according to difference-of-Polya distributions would, summed together, yield noise distributed according to two-sided geometric distribution ([link](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5598559/), theorem 5.1) which we can show central DP bounds for. It is worth mentioning that in these schemes, you can often show (reduced) DP bounds even if only a subset of the aggregators are honestly adding noise, which is exactly the kind of property that you want out of DAP. In general, this is possible when the final distribution you want the output noise to follow is [infinitely divisible](https://en.wikipedia.org/wiki/Infinite_divisibility_(probability)), or has good infinitely divisible approximations.\r\n\r\nVDAFs should probably not make any assumptions about their input shares (i.e. how many are coming from which users, etc). However, if they know both:\r\n- The range that inputs to the VDAF must fall under, and\r\n- The amount of noise the VDAF adds\r\nThen we can specify in some cases the record-level differential privacy claim. That is, how much privacy loss we could expect (in the worst case) on any particular record in the input.\r\n\r\nThis means a DP-aware VDAF could parametrize itself with a new `PublicParam` that encodes a `(epsilon, delta)` tuple describing the desired record-level differential privacy bounds. Then the VDAF could configure itself to add noise scaled properly to achieve this bound. It\u2019s possible the VDAF would need new constants to advertise bounds on epsilon / delta if only some configurations are possible. VDAFs can also have public parameters specifying the distribution they are sampling from to add noise, so users of the VDAF can properly understand the expected variance from aggregating.\r\n\r\nWith VDAFs supporting record-level DP, it should be easy to achieve user-level DP in DAP. The easiest way would be to include a new constraint that each user produces exactly the same number of inputs as any other user (say, N inputs) in a given batch (see #210 also). It is straightforward to show (via group privacy, see Lemma 2.2 [here](https://privacytools.seas.harvard.edu/files/privacytools/files/complexityprivacy_1.pdf)) that this would result in user-level privacy loss at most `(N*epsilon, N*exp(N*epsilon)*delta)`. It should be possible to make DP claims in other settings, but it will be a bit more challenging.\r\n\r\n### 2B. Add noise as a post-processing step after VDAF aggregation\r\n\r\nVDAFs are already complicated things, so it might be possible for noise to be added outside that system (e.g. by DAP). This is appealing, but introduces some new challenges.\r\n\r\nDAP will need to know the effective sensitivity of the VDAF, i.e. how much each record can maximally impact the agg result in order to calibrate the noise. Note that there are multiple ways of measuring sensitivity (L0, L1, L2, Linf, etc.) that could be relevant here, and it might be more optimal to add noise if you know the L2 sensitivity vs. the L1 sensitivity.\r\n\r\nWhen this information is known, and using the type information that DAP should already know about the VDAF, DAP could specify techniques for adding noise to each agg share before they get sent to the collector, based on the exposed sensitivity, a desired privacy level, and the maximum number of input records a user could contribute. We would want generic methods for supporting DP given an arbitrary function F, its sensitivity, type, and #`SHARES` that a DAP deployment could use.\r\n\r\nIn offline discussions with @marianapr, she preferred this approach, but in my opinion it feels pretty complicated to decouple noise addition generically from the aggregation function itself. I'd be interested in other opinions though.\r\n\r\nOf course, we can also discuss parametrizing DAP as well as @tgeoghegan mentions above.\r\n\r\ncc @badih who double checked some of my work here.",
           "createdAt": "2022-05-05T16:59:56Z",
           "updatedAt": "2022-05-05T16:59:56Z"
+        },
+        {
+          "author": "degregat",
+          "authorAssociation": "NONE",
+          "body": "Some information regarding de-risking of approach **2B**: \r\n\r\nA prototype extension for libprio based on this approach can be found [here](https://github.com/degregat/libprio/blob/345ab6f9795dcd60fddc54a24b43eefe9e48a0bd/pclient_dp/main.c#L201), this one being meant to be used as a backend for federated learning. \r\n\r\nProperties for the distributed discrete gaussian can be found [in this paper by google research](https://arxiv.org/abs/2102.06387).\r\nLooking at the above, one could use noise scaling techniques similar to **2A** and would receive an analogous graceful privacy reduction per defecting aggregator (implemented [here](https://github.com/degregat/libprio/blob/345ab6f9795dcd60fddc54a24b43eefe9e48a0bd/prio/server.c#L362)). Though I'm wondering how to think about the case when a subset is defecting, since then the validity checking from the PCPs breaks down, and we get different problems as well. (This should be true for **2A** as well, no?)\r\n\r\nThere are now [prototype tools](https://diffmu.github.io/DiffPrivacyInference.jl/dev/tutorial/01_sensitivity_functions/#Sensitivity), to infer sensitivity as well as privacy guarantees of functions, so it sounds more feasible by the day to find out the sensitivity of a given VDAF, without it being too labor intensive.\r\n\r\nIn any case, it is advisable to use discrete distributions to prevent being vulnerable to [floating point attacks](https://www.microsoft.com/en-us/research/wp-content/uploads/2012/10/lsbs.pdf).",
+          "createdAt": "2022-05-31T20:05:46Z",
+          "updatedAt": "2022-06-01T08:45:59Z"
+        },
+        {
+          "author": "csharrison",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Thanks @degregat ! I think the distrusted aggregators adding \"too much noise\" to compromise the result is a good thing to try to protect against. However, I am not sure how necessary it is given that malicious aggregators can [already compromise the result](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#section-6.1.2.2) in the DAP threat model. In any case it's not obvious to me whether this is easier to achieve in 2A or 2B.\r\n- In 2A we could add another round to the initialization step to pass around noise shares.\r\n- In 2B perhaps the leader crafts noise shares before interacting with the other aggregators. This would move the idea from \"post-processing\" to \"pre-processing\", to take advantage of the VDAFs verification.\r\n\r\n> There are now [prototype tools](https://diffmu.github.io/DiffPrivacyInference.jl/dev/tutorial/01_sensitivity_functions/#Sensitivity), to infer sensitivity as well as privacy guarantees of functions, so it sounds more feasible by the day to find out the sensitivity of a given VDAF, without it being too labor intensive.\r\n\r\nThat is very interesting! Thanks for sharing.\r\n\r\n> In any case, it is advisable to use discrete distributions to prevent being vulnerable to [floating point attacks](https://www.microsoft.com/en-us/research/wp-content/uploads/2012/10/lsbs.pdf).\r\n\r\nI agree, I think it's generally easier in the MPC to have support only on integers, so I don't think that's a big constraint.\r\n",
+          "createdAt": "2022-06-01T14:13:54Z",
+          "updatedAt": "2022-06-01T14:13:54Z"
         }
       ]
     },
@@ -3843,7 +3857,7 @@
       "labels": [],
       "body": "Let's start with an overview of the problem as I understand it. Currently, batch management is dealt with by dividing the time into a contiguous list of batch windows, each of size min_batch_duration epochs. This is illustrated below (T denotes the T\u2019th batch window):\r\n\r\n~~~\r\n|...| T - 1 |  T  | T + 1 |...|\r\n~~~\r\n\r\nEach report indicates an epoch that places it uniquely into one batch window. \r\n\r\nWhen Collectors request the aggregate shares for a batch window, they indicate the interval of time they are interested in collecting aggregate results. This request is constrained in that the interval must be a multiple of the batch window size (min_batch_duration), though it can exceed more than one batch window. For example, a Collector can request aggregate shares for a single batch window T (marked with asterisks), as follows:\r\n\r\n~~~\r\n|...| T - 1 |  T  | T + 1 |...|\r\n            *******\r\n~~~\r\n\r\nA Collector can also request aggregate shares for multiple, consecutive batch windows T and T+1 as follows:\r\n\r\n~~~\r\n|...| T - 1 |  T  | T + 1 |...|\r\n            ***************\r\n~~~\r\n\r\nFor privacy, each collect request must correspond to some minimum number of measurements, called the min_batch_size. If the aggregators do not have enough report shares to satisfy the request, they must respond with an error. \r\n\r\nIntiuitively, this requirement is meant to esnure that the collect requests cannot be abused to learn individual measurements contributed to an aggregate output. However, the current batch scheme doesn't abide by this requirement. To see why, assume there exists a batch window T in which min_batch_size reports fall. Moreover, assume that there exists only one report in the T+1 window. Assume further the Collector makes the following pair of requests:\r\n\r\n1. out1 = Collect(T, T+1)\r\n2. out2 = Collect(T)\r\n\r\nThis would be a reasonable sequence of requests if, for example, the Collector wanted to drill down to get data for a more fine-grained batch window. However, if both requests were satisfied given the current set of reports, the delta between out1 and out2 would allow the Collector to learn the value of the single individual report in the window T+1. In general, the protocol should prohibit privacy violations of this form.\r\n\r\nOne way to rule out such privacy violations is to require that each batch window covered by a collect request contain at least min_batch_size reports. (In the example above, the first collect request above would be prohibited because T+1 has just one report.) However, this is perhaps overly restrictive. We want queries to be flexible enough to allow one to slice batches differently, but this needs to be done such that privacy violations cannot occur. \r\n\r\nGiven the above, here\u2019s an attempt to formalize the batch query constraint requirement. Let Ci = Collect(Ti,..., Tn), i <= n denote a collect request for the batch interval Ti,...,Tn. For each Ci there exists a unique Si = {r | Ti,...,Tn} where |Si| >= B. That is, Si is the set of reports included in the aggregate covered by the interval Ti,...,Tn, and its size is at least B, where B is min_batch_size.\r\n\r\nBased on this, the requirement can simply be stated as follows. Given Ci,...,Cq collect requests, it must not be possible for the collector to reconstruct an aggregate of over a report set S* such that |S*| < B . The Collector can run any number set operations, including intersection, union, and difference, using the output sets Si,...,Sq.\r\n\r\nThere's a number of questions that might follow from this:\r\n\r\n- Is this the right requirement? If not, how should it be tweaked?\r\n- If so, should the protocol specify how to enforce it, or defer that to the implementations? If we assume that collect requests will always agree on their aggregate inputs, then maybe we can simply rely on this and each aggregator's own \"collect request validation implementation\" to ensure the batch constraints aren't violated. \r\n- If we do decide to specify its enforcement, how should aggregators check collect requests for correctness while supporting query flexibility? For example, as in #183, what if one wanted to include a \"space dimension\" with a query, e.g., \"give me the aggregate for all reports in time Ti,..,Tj for this given User-Agent\" or whatever, then one shouldn't be able to abuse this to violate the requirement above.\r\n\r\nThere may be other questions that fall out of this as well, but hopefully this gets the ball rolling.",
       "createdAt": "2022-03-04T00:59:18Z",
-      "updatedAt": "2022-04-18T10:54:00Z",
+      "updatedAt": "2022-05-31T19:14:17Z",
       "closedAt": null,
       "comments": [
         {
@@ -3873,6 +3887,27 @@
           "body": "Would it be a good middle-ground to always split the client space into disjoint sets? That would simplify the computation of what is allowed, as David described above, but would still allow some flexibility to drill-down into results, as long as the disjoint sets don't get too small.\r\n\r\nThe reasoning is that, given two sets A and B, with A \u2286 B, and \u03a3B = X, \u03a3A = Y, clearly the difference B\\A  has \u03a3B\\A = X-Y. So, to keep the privacy requirements, B\\A must have `min_batch_size` elements as well.\r\n\r\n(Edit: Note that drill-down would necessarily mean that aggregators have to store which sets they have used and to disable all sets containing a nonce when pruning old nonces.)",
           "createdAt": "2022-04-12T12:31:40Z",
           "updatedAt": "2022-04-18T10:54:00Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I was thinking about collect requirements for [Prio3Aes128Histogram](https://cfrg.github.io/draft-irtf-cfrg-vdaf/draft-irtf-cfrg-vdaf.html#name-prio3aes128histogram), and I'm now wondering if the definition and enforcement of collect protocol privacy requirements might depend on the VDAF in use, and thus some portion of this will have be defined at the VDAF layer.\r\n\r\nOur thinking thus far is that DAP aggregators would have to enforce a minimum number of contributions within a collect request's batch interval. The appeal of this approach is that it can be applied generically regardless of the VDAF in use and depends on a single shared parameter that's easy to apply. But suppose someone deploys Prio3Aes128Histogram, picks a reasonable minimum batch size, but happens to choose their bucket boundaries such that one of the buckets always contains a single contribution. Does that violate the privacy of the individual who reported that value?\r\n\r\nA straightforward fix here would be to say that an aggregator should refuse to release a Prio3Aes128Histogram aggregate share unless each bucket has either zero contributions or enough contributions to meet some a privacy threshold. But introducing special cases for VDAFs at the DAP layer seems wrong, so perhaps the enforcement of this kind of thing should be specified in the VDAF's [`out_shares_to_agg_share`](https://cfrg.github.io/draft-irtf-cfrg-vdaf/draft-irtf-cfrg-vdaf.html#name-aggregation-2) function, which would now optionally return an error if privacy requirements aren't met?",
+          "createdAt": "2022-05-31T17:50:19Z",
+          "updatedAt": "2022-05-31T17:50:19Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "NONE",
+          "body": "I think this has to be handled not just at the VDAF side of things but in the task definition. The impact of the collected information on privacy and the leakage of the specific aggregration function are task specific and need to be be handled there.\r\n\r\nI am not sure how straightforward your fix would be, given that aggregators don't see how many entries there are in a bucket. So this would be another validation step. But actually a post-aggregation validation step might be a useful extension. \ud83e\udd14",
+          "createdAt": "2022-05-31T19:03:22Z",
+          "updatedAt": "2022-05-31T19:03:22Z"
+        },
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "If we do view this as a privacy violation, it's a rather sticky one: as Simon points out, the collector is the first entity that would be able to determine how many reports any given bucket contains (since it unshards the aggregate shares into an aggregate result). But once the collector has computed the aggregate result it has exposed itself to the privacy-violating measurement, and we must trust that the collector will act unilaterally to do the right thing. In contrast, the other privacy protections such as `min_batch_size` are implemented by both the leader & the helper aggregators (i.e. two separate, non-colluding entities) and are implemented without revealing the privacy-violating measurements.",
+          "createdAt": "2022-05-31T19:14:17Z",
+          "updatedAt": "2022-05-31T19:14:17Z"
         }
       ]
     },
@@ -4586,9 +4621,45 @@
       "labels": [],
       "body": "There is an agg_param in AggregateInitializeReq and in CollectReq and in AggregateShareReq.\r\nIIUC CollectReq.agg_param may need to be forwarded as AggregateInitializeReq.agg_param or - depending on the VDAF - later as AggregateShareReq.agg_param.\r\n\r\nISTM the logic needs to be specified to implement DAP correctly.",
       "createdAt": "2022-05-30T08:29:30Z",
-      "updatedAt": "2022-05-30T08:29:30Z",
+      "updatedAt": "2022-05-31T16:12:58Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Yes, both the agg_param and batch_interval need to match. Is there anything that needs to change in order to make this so?",
+          "createdAt": "2022-05-31T15:16:49Z",
+          "updatedAt": "2022-05-31T15:16:49Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "NONE",
+          "body": "Well, if the agg_param in all three (CollectReq, AggregateInitializeReq, AggregateShareReq) must be the same the leader cannot start aggregating before the collector sends the request. Which is an optimization that was requested, right?\r\n\r\nI think there are two valid scenarios:\r\n1. AggregateInitializeReq.agg_param can be determined by the leader, e.g. because it is empty. In this case the leader can start aggregating ahead of time, without a request. Later AggregateShareReq.agg_param will be set to CollectReq.agg_param.\r\n2. AggregateInitializeReq.agg_param does need information from the collector. So it is set to CollectReq.agg_param. Presumably AggregateShareReq.agg_param can then be empty.\r\n\r\n",
+          "createdAt": "2022-05-31T15:29:50Z",
+          "updatedAt": "2022-05-31T15:29:50Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Right, these are the two valid scenarios. For (2.) the current use case is Prio3, where the agg_param is always \"\" and aggregation can begin prior to receiving a collect request. For (1.) the envisioned use case is Poplar1, where the agg parameter encodes a set of candidate prefixes. In general these cannot be known until the agg result for a previous Poplar1 evaluation has been collected.",
+          "createdAt": "2022-05-31T16:01:17Z",
+          "updatedAt": "2022-05-31T16:01:42Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "NONE",
+          "body": "So we need a flag in the Task to determine which scenario applies, right?",
+          "createdAt": "2022-05-31T16:05:40Z",
+          "updatedAt": "2022-05-31T16:05:40Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Unless this impacts interop, I don't think the spec needs normative text to address this. I think the text we have in the overview is sufficient.",
+          "createdAt": "2022-05-31T16:12:58Z",
+          "updatedAt": "2022-05-31T16:12:58Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -32336,6 +32407,48 @@
           "body": "",
           "createdAt": "2022-05-24T19:04:27Z",
           "updatedAt": "2022-05-24T19:04:27Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 268,
+      "id": "PR_kwDOFEJYQs44zi2o",
+      "title": "Venue stuff",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/268",
+      "state": "MERGED",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Remove some cruft",
+      "createdAt": "2022-06-01T06:10:18Z",
+      "updatedAt": "2022-06-01T20:10:19Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "68c2a0c98fcf7880fc1f3924d043f2ea77cc6e16",
+      "headRepository": "martinthomson/ppm-dap",
+      "headRefName": "venue-stuff",
+      "headRefOid": "6a88651fc3d3ece58fede307e722877678da8420",
+      "closedAt": "2022-06-01T20:10:19Z",
+      "mergedAt": "2022-06-01T20:10:19Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "1225fa8f19288f4de093f341397d7c8028203b20"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs47ITea",
+          "commit": {
+            "abbreviatedOid": "6a88651"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "\u2764\ufe0f \r\n",
+          "createdAt": "2022-06-01T14:04:01Z",
+          "updatedAt": "2022-06-01T14:04:01Z",
           "comments": []
         }
       ]
