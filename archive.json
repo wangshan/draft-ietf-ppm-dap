@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-06-02T01:21:29.411205+00:00",
+  "timestamp": "2022-06-12T01:21:35.718014+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -32452,6 +32452,47 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 269,
+      "id": "PR_kwDOFEJYQs45XXUJ",
+      "title": "Pretty pictures",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/269",
+      "state": "OPEN",
+      "author": "martinthomson",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Anyone running builds locally will need a few extra pieces of software to manage this, but the result is something like this:\r\n\r\n![image](https://user-images.githubusercontent.com/67641/172771593-c22d2278-d803-4391-9c95-5e6e60b9af29.png)\r\n\r\n...with the appropriate palette inversion for people using dark mode.",
+      "createdAt": "2022-06-09T05:33:19Z",
+      "updatedAt": "2022-06-09T14:33:03Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "1225fa8f19288f4de093f341397d7c8028203b20",
+      "headRepository": "martinthomson/ppm-dap",
+      "headRefName": "aasvg",
+      "headRefOid": "f6371656ecf00415d7a820828a13c5c3e83a8abc",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Oh, the software in question is 'svgcheck' (installed with pip3/python) and 'aasvg' (installed with npm/nodejs).",
+          "createdAt": "2022-06-09T05:34:00Z",
+          "updatedAt": "2022-06-09T05:34:00Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Before we land this can we adjust the Makefiles to alert the user about this--and even better, fail gracefully. I found it kind of surprising when my drafts just stopped building.",
+          "createdAt": "2022-06-09T14:33:03Z",
+          "updatedAt": "2022-06-09T14:33:03Z"
+        }
+      ],
+      "reviews": []
     }
   ]
 }
