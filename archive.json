@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-06-12T01:21:35.718014+00:00",
+  "timestamp": "2022-06-14T01:26:59.812778+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4080,15 +4080,15 @@
       "id": "I_kwDOFEJYQs5HvhGi",
       "title": "Drop ordering requirement on successive Aggregate requests",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/217",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "BranLwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Currently, the successive aggregate requests in an aggregation job are required to include client report data (report shares/transitions) in a consistent order.\r\n\r\nExample language from the spec:\r\n> The sequence of Transition messages corresponds to the ReportShare sequence of the AggregateInitReq. The order of these sequences MUST be the same (i.e., the nonce of the first Transition MUST be the same as first ReportShare and so on).\r\n\r\n> Next, the helper processes the Transition messages from the leader. If any message appears out of order or has an unrecognized nonce, or if any two messages have the same nonce, then the helper MUST abort with error \"unrecognizedMessage\".\r\n\r\n\r\nThe justification I have heard for this requirement is that requiring ordering saves implementations from needing to do an `O(n lg n)` sort, where `n` is the number of client reports being processed. However, even without ordering, no sort or other `O(n lg n)` operation would be required from implementations. Specifically, the aggregator can construct a hashmap from report nonce to report share/transition (requiring `O(n)` time total); then, when matching report shares/transitions to stored state, do an `O(1)` map lookup per report, for a total of `O(n)` time spent doing lookups.\r\n\r\n\r\nAn upside to dropping the ordering requirement is a simpler specification which permits a simpler implementation with fewer error modes.\r\n\r\n\r\nA downside to dropping the ordering requirement is that, even though both ordered and non-ordered implementations can do matching of request parts to stored state in `O(n)` time, I suspect that the unordered implementation will take more wallclock time (e.g. have \"larger constants hidden by the big-O\") due to the hashmap operations. [Not measured yet.]\r\n\r\n\r\nQuestions:\r\n* Is there a justification other than avoiding an `O(n lg n)` sort to requiring consistency of ordering in aggregate requests?",
       "createdAt": "2022-04-13T18:23:59Z",
-      "updatedAt": "2022-05-04T18:46:48Z",
-      "closedAt": null,
+      "updatedAt": "2022-06-13T19:39:34Z",
+      "closedAt": "2022-06-13T19:39:34Z",
       "comments": [
         {
           "author": "BranLwyd",
@@ -4110,6 +4110,13 @@
           "body": "Here's how we ended up solving the problem in ECH: https://github.com/davidben/draft-ietf-tls-esni/commit/f8e9df6c475f9268b3f0b9054c14f76ca9cbe9d7#",
           "createdAt": "2022-05-04T18:46:05Z",
           "updatedAt": "2022-05-04T18:46:05Z"
+        },
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closing this for now -- this is a minor request, and I think the arguments for keeping the ordering requirement are good. We can reopen if this question comes up again.",
+          "createdAt": "2022-06-13T19:39:34Z",
+          "updatedAt": "2022-06-13T19:39:34Z"
         }
       ]
     },
@@ -4660,6 +4667,22 @@
           "updatedAt": "2022-05-31T16:12:58Z"
         }
       ]
+    },
+    {
+      "number": 270,
+      "id": "I_kwDOFEJYQs5Ls3zt",
+      "title": "Consider specifying problem type for \"unrecognized aggregation job\"",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/270",
+      "state": "OPEN",
+      "author": "BranLwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Similarly to the \"unrecognizedTask\" error token, a request might reference a nonexistent/unknown aggregation job. It may be useful to specify an \"unrecognizedAggregationJob\" or similar error token for this case.",
+      "createdAt": "2022-06-13T23:04:34Z",
+      "updatedAt": "2022-06-13T23:04:34Z",
+      "closedAt": null,
+      "comments": []
     }
   ],
   "pulls": [
