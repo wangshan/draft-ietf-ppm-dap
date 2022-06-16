@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-06-14T01:26:59.812778+00:00",
+  "timestamp": "2022-06-16T01:16:00.830806+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4681,6 +4681,38 @@
       "body": "Similarly to the \"unrecognizedTask\" error token, a request might reference a nonexistent/unknown aggregation job. It may be useful to specify an \"unrecognizedAggregationJob\" or similar error token for this case.",
       "createdAt": "2022-06-13T23:04:34Z",
       "updatedAt": "2022-06-13T23:04:34Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 271,
+      "id": "I_kwDOFEJYQs5L1mLK",
+      "title": "Consider enforcing min_batch_size check in aggregator",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271",
+      "state": "OPEN",
+      "author": "wangshan",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "`min_batch_size` as part of task parameters is distributed out of band by aggregators. At the moment there's no protocol level support to guarantee `min_batch_size` is not maliciously reduced by a dishonest leader. For use cases that work with central differential privacy, the `min_batch_size` is chosen based on an epsilon-dp guarantee over a certain batch. A dishonest leader can send a smaller `min_batch_size` to helper to break a strong dp guarantee.\r\n \r\nOne possible solution is to include parameters like `min_batch_size` (and other privacy parameters, for eg. epsilons in differential privacy) in `Extension`, which will become part of AAD therefore avoid tempering, and enforcing aggregators to check the out-of-band `min_batch_size` matches the ones included in every `Extension` field for the same task. Aggregator can also implement a one-off calculation on the task parameters to verify the `min_batch_size` is reasonable with other provided privacy parameters. For example, given a local differential privacy epsilon e_0, target central differential privacy epsilon e_c, and a min_batch_size N,  we can calculate whether e_c can be achieved  by aggregating e_0 over N reports, by using various shuffling amplification analysis.",
+      "createdAt": "2022-06-15T14:41:02Z",
+      "updatedAt": "2022-06-15T14:41:02Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 272,
+      "id": "I_kwDOFEJYQs5L20ft",
+      "title": "Increase Ciphertext size limit",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/272",
+      "state": "OPEN",
+      "author": "wangshan",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Current HPKE Ciphertext size is limited to 2 bytes, about 65KB, many use cases will need more than this, Prio for eg. doesn't have this limit. Can we change this to 4 bytes  so the size can be `<1..2^32-1>`?\r\n\r\n```\r\nstruct {\r\n  HpkeConfigId config_id;    // config ID\r\n  opaque enc<1..2^16-1>;     // encapsulated HPKE key\r\n  opaque payload<1..2^16-1>; // ciphertext\r\n} HpkeCiphertext;\r\n```",
+      "createdAt": "2022-06-15T19:48:27Z",
+      "updatedAt": "2022-06-15T19:48:27Z",
       "closedAt": null,
       "comments": []
     }
