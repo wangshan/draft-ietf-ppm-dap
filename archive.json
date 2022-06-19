@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-06-16T01:16:00.830806+00:00",
+  "timestamp": "2022-06-19T01:19:19.286991+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4696,9 +4696,31 @@
       "labels": [],
       "body": "`min_batch_size` as part of task parameters is distributed out of band by aggregators. At the moment there's no protocol level support to guarantee `min_batch_size` is not maliciously reduced by a dishonest leader. For use cases that work with central differential privacy, the `min_batch_size` is chosen based on an epsilon-dp guarantee over a certain batch. A dishonest leader can send a smaller `min_batch_size` to helper to break a strong dp guarantee.\r\n \r\nOne possible solution is to include parameters like `min_batch_size` (and other privacy parameters, for eg. epsilons in differential privacy) in `Extension`, which will become part of AAD therefore avoid tempering, and enforcing aggregators to check the out-of-band `min_batch_size` matches the ones included in every `Extension` field for the same task. Aggregator can also implement a one-off calculation on the task parameters to verify the `min_batch_size` is reasonable with other provided privacy parameters. For example, given a local differential privacy epsilon e_0, target central differential privacy epsilon e_c, and a min_batch_size N,  we can calculate whether e_c can be achieved  by aggregating e_0 over N reports, by using various shuffling amplification analysis.",
       "createdAt": "2022-06-15T14:41:02Z",
-      "updatedAt": "2022-06-15T14:41:02Z",
+      "updatedAt": "2022-06-17T09:11:00Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "`min_batch_size` is distributed out-of-band, which means that the helper and leader are considered to both have the value configured separately (i.e. without a chance for one of the aggregators modify the value that is configured for the other aggregator).\r\n\r\n`min_batch_size` is also evaluated separately and independently by each aggregator for each collect operation. The leader's check is specified in [Collection Initialization](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-collection-initialization) & the helper's check is specified in [Collection Aggregation](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-collection-aggregation). (In both cases, the relevant section refers to the [Validating Batch Parameters](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-validating-batch-parameters) section which specifies the `min_batch_size` check directly.)\r\n\r\nGiven the above, I believe a malicious leader cannot reduce `min_batch_size`, either at time of task initialization or at time of collection. (A malicious leader can certainly skip its own `min_batch_size` check, but as long as the helper does not collude, a small batch will still be caught by the helper's check.)\r\n\r\n> Aggregator can also implement a one-off calculation on the task parameters to verify the `min_batch_size` is reasonable with other provided privacy parameters.\r\n\r\nThis is an interesting idea & worthy of consideration IMO -- AFAIK, the DAP spec currently does not speak to what values of `min_batch_size` are reasonable.",
+          "createdAt": "2022-06-16T18:11:03Z",
+          "updatedAt": "2022-06-16T18:11:03Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "NONE",
+          "body": "I think the problem is DAP doesn't specify how task parameters are distributed out-of-band. If the task parameters is sent to helper from a malicious leader before task initialisation, then the helper would check against a wrong `min_batch_size` later.\r\n\r\nHaving said that, my above suggestion of checking against a `min_batch_size` in AAD also assumes client have the right task parameters.\r\n\r\nOn the other hand, I see there is an open issue in [Differential privacy](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-differential-privacy):\r\n```\r\n[OPEN ISSUE: While parameters configuring the differential privacy noise (like specific distributions / variance) can be agreed upon out of band by the aggregators and collector, there may be benefits to adding explicit protocol support by encoding them into task parameters.]\r\n```\r\nThese DP parameters will face the same problem: how do we guarantee they are configured honestly.\r\n\r\nI agree we should consider adding `min_batch_size` calculation from epsilon-dp parameters. There are well researched paper about calculating `min_batch_size` based on local DP from each client and a desired central DP on the batch. This _may_ need to be VDAF specific though.",
+          "createdAt": "2022-06-16T20:10:04Z",
+          "updatedAt": "2022-06-16T20:10:04Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "NONE",
+          "body": "Regarding the values of `min_batch_size`, there is an explicit statement in \"[6.4 Batch Parameters](https://ietf-wg-ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html#name-batch-parameters)\":\r\n\r\n> This document does not specify how to choose minimum batch sizes.\r\n\r\nI think there also used to be a somewhat obvious statement that if `min_batch_size` is 1 there is no privacy but I cannot find it anymore.\r\n\r\nI assume specification is avoided because there might be corner cases where low values make sense, e.g. some tasks might have a batch size of 2 because plausible deniability is enough. I would also like to see some guidance/examples on this but probably in the VDAF spec.",
+          "createdAt": "2022-06-17T09:11:00Z",
+          "updatedAt": "2022-06-17T09:11:00Z"
+        }
+      ]
     },
     {
       "number": 272,
@@ -4713,6 +4735,67 @@
       "body": "Current HPKE Ciphertext size is limited to 2 bytes, about 65KB, many use cases will need more than this, Prio for eg. doesn't have this limit. Can we change this to 4 bytes  so the size can be `<1..2^32-1>`?\r\n\r\n```\r\nstruct {\r\n  HpkeConfigId config_id;    // config ID\r\n  opaque enc<1..2^16-1>;     // encapsulated HPKE key\r\n  opaque payload<1..2^16-1>; // ciphertext\r\n} HpkeCiphertext;\r\n```",
       "createdAt": "2022-06-15T19:48:27Z",
       "updatedAt": "2022-06-15T19:48:27Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 273,
+      "id": "I_kwDOFEJYQs5L6ZxK",
+      "title": "Collect without interval",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273",
+      "state": "OPEN",
+      "author": "wangshan",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "If the collector is not interested in time and interval, but simply want to collect aggregation in a batch that meets `min_batch_size`. Then can the protocol support a 'batch-based collection' instead of current interval-based?\r\n\r\nConsider a Prio usecase, when `max_batch_lifetime == 1`, collector will only need to collect the aggregation so far, with a batch size B >= `min_batch_size`. This can be orchestrated by the leader, which can implement a counting service to track batch size for a task, once it reaches `min_batch_size`, leader sends AggregateShareReq to collect helper's `aggregate_share` and return to collector.\r\n\r\nThis requires a new id to tie agg-flow with agg-share-flow. For example, in addition to `agg_job_id`, leader can send a unique `batch_id` in every AggregateReq. At collect time, leader use the same `batch_id` to collect `output_share` in helper (helper can still proactively aggregate output_shares to `aggregate_share`, since there are no more batch windows, helper can store `aggregate_share` by `agg_job_id`, or accumulate all aggregation jobs' `output_share` to one `aggregate_share`, and store it with `batch_id`). Illustrated as following:\r\n\r\n```\r\n|<------------------------ batch_id1 ----------------->| <== AggregationShareReq\r\n|    agg_job_id1     |   agg_job_id2   |   agg_job_id3 | <== AggregateReq\r\nT0                                                    Tm <== Time\r\n```\r\nHere [T0, Tm] is the time takes to aggregate `min_batch_size` number of reports, it has no relationship with `min_batch_duration` or collector interval.\r\n\r\nAs this issue pointed out: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/195, to avoid privacy leak, each batch window must contain at least `min_batch_size` reports, otherwise attacker can find ways to slice intervals to break privacy guarantee. But if the protocol does require each batch window meets `min_batch_size`, then the collect interval itself is no longer useful, since the duration that takes to meet `min_batch_size` is the smallest duration that can be queried. Therefore, it seems to make sense to base collection entirely on batch size, not interval.\r\n",
+      "createdAt": "2022-06-16T13:55:49Z",
+      "updatedAt": "2022-06-17T12:35:45Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "wangshan",
+          "authorAssociation": "NONE",
+          "body": "In this case the aggregators no longer need to worry about `min_batch_duration`. Leader can store last know Tm to filter out late arrivals if needed.",
+          "createdAt": "2022-06-16T13:59:51Z",
+          "updatedAt": "2022-06-16T13:59:51Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "NONE",
+          "body": "This seems similar to my suggestion in #218 of having a `batch_filter` to allow more flexible specification of subsets of reports.",
+          "createdAt": "2022-06-17T08:29:29Z",
+          "updatedAt": "2022-06-17T08:29:29Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "NONE",
+          "body": "Yes, `batch_filter` sounds like a more generic name that can incorporate both batch interval and batch id. \r\n\r\nBut I think allowing advanced filter can open up privacy concerns. When slicing the batches, one not only have to make sure the sliced batch meets all privacy guarantees, but also all the deltas with previously slices. We may find a way to do this with time intervals, but adding other metadata like region will make it extremely hard. These metadata will likely be related to client measurements, so I think it's better to encode such information in the measurement, or designing different tasks for them. \r\n\r\nThere are use cases where drill down or fine-grained filtering is not needed, usr simply want aggregate results with privacy guarantee.",
+          "createdAt": "2022-06-17T12:01:23Z",
+          "updatedAt": "2022-06-17T12:01:23Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "NONE",
+          "body": "Agreed, previous discussion on this topic is mainly here: #195 ",
+          "createdAt": "2022-06-17T12:35:45Z",
+          "updatedAt": "2022-06-17T12:35:45Z"
+        }
+      ]
+    },
+    {
+      "number": 274,
+      "id": "I_kwDOFEJYQs5L6jUI",
+      "title": "Consider supporting coarse-grained timestamp in Nonce",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/274",
+      "state": "OPEN",
+      "author": "wangshan",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Not sure if DAP enforces precision of `Nonce.Time`:\r\n\r\n```\r\nTime uint64; /* seconds elapsed since start of UNIX epoch */\r\n```\r\n\r\nBut with fine-grained timestamp, it is easier for attacker to associate a report with the user sent that report. For example, if timestamp is accurate to second, and leader is compromised, attacker can compare users that uploaded at a given second (perhaps from a routing server) and reports' timestamp, then figure out if a particular user has contributed to a task. With a coarse-grained timestamp, however, we can minimise this threat with a secure routing server. Anti-replay can still be satisfied with the UUID part of Nonce.\r\n\r\n\r\n",
+      "createdAt": "2022-06-16T14:25:47Z",
+      "updatedAt": "2022-06-16T14:25:47Z",
       "closedAt": null,
       "comments": []
     }
@@ -32547,6 +32630,32 @@
           "updatedAt": "2022-06-09T14:33:03Z"
         }
       ],
+      "reviews": []
+    },
+    {
+      "number": 275,
+      "id": "PR_kwDOFEJYQs451uST",
+      "title": "Clarify meaning of out-of-band.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/275",
+      "state": "OPEN",
+      "author": "simon-friedberger",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Proposal for https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271",
+      "createdAt": "2022-06-17T08:53:37Z",
+      "updatedAt": "2022-06-17T08:53:38Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "1225fa8f19288f4de093f341397d7c8028203b20",
+      "headRepository": "simon-friedberger/draft-ietf-ppm-dap",
+      "headRefName": "oob",
+      "headRefOid": "3231dd80fb030c31e3bcbd59b63db1391abeee43",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
       "reviews": []
     }
   ]
