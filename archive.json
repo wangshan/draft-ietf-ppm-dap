@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-06-19T01:19:19.286991+00:00",
+  "timestamp": "2022-06-21T01:20:55.914518+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4796,6 +4796,22 @@
       "body": "Not sure if DAP enforces precision of `Nonce.Time`:\r\n\r\n```\r\nTime uint64; /* seconds elapsed since start of UNIX epoch */\r\n```\r\n\r\nBut with fine-grained timestamp, it is easier for attacker to associate a report with the user sent that report. For example, if timestamp is accurate to second, and leader is compromised, attacker can compare users that uploaded at a given second (perhaps from a routing server) and reports' timestamp, then figure out if a particular user has contributed to a task. With a coarse-grained timestamp, however, we can minimise this threat with a secure routing server. Anti-replay can still be satisfied with the UUID part of Nonce.\r\n\r\n\r\n",
       "createdAt": "2022-06-16T14:25:47Z",
       "updatedAt": "2022-06-16T14:25:47Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 276,
+      "id": "I_kwDOFEJYQs5MFYra",
+      "title": "Add metadata definition",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/276",
+      "state": "OPEN",
+      "author": "simon-friedberger",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "It would be convenient for testing purposes if we could just collect some random data and also send that data as metadata for comparison.\r\n\r\nSince we already discussed that we might need other metadata for slicing I think it would be good to add a definition for it. Could probably be as simple as saying \"there are `n` opaque metadata bytes with `n`, it's meaning and usage defined by the task\".",
+      "createdAt": "2022-06-20T07:18:20Z",
+      "updatedAt": "2022-06-20T07:18:20Z",
       "closedAt": null,
       "comments": []
     }
