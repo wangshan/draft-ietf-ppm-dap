@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 3 December 2022                                      Cloudflare
+Expires: 25 December 2022                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                             1 June 2022
+                                                            23 June 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -60,7 +60,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 December 2022.
+   This Internet-Draft will expire on 25 December 2022.
 
 Copyright Notice
 
@@ -347,8 +347,9 @@ Table of Contents
       batch window".
 
    These parameters are distributed out of band to the clients and to
-   the aggregators.  Each task is identified by a unique 32-byte ID
-   which is used to refer to it in protocol messages.
+   the aggregators.  They are distributed by the collecting entity in
+   some authenticated form.  Each task is identified by a unique 32-byte
+   ID which is used to refer to it in protocol messages.
 
    During the duration of the measurement, each client records its own
    value(s), packages them up into a report, and sends them to the
