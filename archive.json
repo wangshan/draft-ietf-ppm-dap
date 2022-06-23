@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-06-21T01:20:55.914518+00:00",
+  "timestamp": "2022-06-23T01:10:36.786915+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4795,9 +4795,17 @@
       "labels": [],
       "body": "Not sure if DAP enforces precision of `Nonce.Time`:\r\n\r\n```\r\nTime uint64; /* seconds elapsed since start of UNIX epoch */\r\n```\r\n\r\nBut with fine-grained timestamp, it is easier for attacker to associate a report with the user sent that report. For example, if timestamp is accurate to second, and leader is compromised, attacker can compare users that uploaded at a given second (perhaps from a routing server) and reports' timestamp, then figure out if a particular user has contributed to a task. With a coarse-grained timestamp, however, we can minimise this threat with a secure routing server. Anti-replay can still be satisfied with the UUID part of Nonce.\r\n\r\n\r\n",
       "createdAt": "2022-06-16T14:25:47Z",
-      "updatedAt": "2022-06-16T14:25:47Z",
+      "updatedAt": "2022-06-22T18:41:36Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This is a valid concern. One reasonable change would be to modify the report timestamp to align with the batch window start (min_batch_duration), and then bump the size of the nonce to offset the increase change of collisions. Specifically, this would mean we update the Nonce like so:\r\n\r\n~~~\r\nstruct {\r\n  Time time; // set to min_batch_duration for current batch window\r\n  uint8 rand[32]; // or 16 bytes, whatever we're comfortable with for the sake of minimizing collisions\r\n} Nonce;\r\n~~~\r\n\r\n@wangshan, would this work? @ekr, @tgeoghegan, @cjpatton, thoughts?",
+          "createdAt": "2022-06-22T18:41:35Z",
+          "updatedAt": "2022-06-22T18:41:35Z"
+        }
+      ]
     },
     {
       "number": 276,
