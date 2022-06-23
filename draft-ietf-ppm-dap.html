@@ -2346,13 +2346,11 @@ struct {
 } PrepareStep;
 
 struct {
-  AggregationJobID job_id;
   PrepareStep prepare_steps&lt;1..2^16-1&gt;;
 } AggregateInitializeResp;
 </pre><a href="#section-4.3.1.2-6" class="pilcrow">¶</a>
 </div>
-<p id="section-4.3.1.2-7">The <code>job_id</code> parameter is equal to AggregateInitializeReq.job_id.
-The rest of the message is a sequence of PrepareStep values, the order of which
+<p id="section-4.3.1.2-7">The message is a sequence of PrepareStep values, the order of which
 matches that of the ReportShare values in <code>AggregateInitializeReq.report_shares</code>. Each report
 that was marked as invalid is assigned the PrepareStepResult <code>failed</code>. Otherwise, the
 PrepareStep is either marked as continued with the output <code>prep_msg</code>, or is marked
@@ -2556,7 +2554,6 @@ to the leader in an AggregateContinueResp message, structured as follows:<a href
 <div class="alignLeft art-text artwork" id="section-4.3.2.2-9">
 <pre>
 struct {
-  AggregationJobID job_id;
   PrepareStep prepare_shares&lt;1..2^16-1&gt;;
 } AggregateContinueResp;
 </pre><a href="#section-4.3.2.2-9" class="pilcrow">¶</a>
