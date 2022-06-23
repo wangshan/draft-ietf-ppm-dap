@@ -2494,6 +2494,7 @@ structured as follows:<a href="#section-4.3.2.1-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3.2.1-6">
 <pre>
 struct {
+  TaskID task_id;
   AggregationJobID job_id;
   PrepareStep prepare_shares&lt;1..2^16-1&gt;;
 } AggregateContinueReq;
