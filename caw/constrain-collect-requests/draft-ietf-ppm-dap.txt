@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 5 November 2022                                      Cloudflare
+Expires: 25 December 2022                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                              4 May 2022
+                                                            23 June 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -29,15 +29,21 @@ Abstract
    (DAP) for privacy preserving measurement (PPM) which can be used to
    collect aggregate data without revealing any individual user's data.
 
-Discussion Venues
+About This Document
 
    This note is to be removed before publishing as an RFC.
 
-   Discussion of this document takes place on the mailing list (), which
-   is archived at .
+   The latest revision of this draft can be found at https://ietf-wg-
+   ppm.github.io/draft-ietf-ppm-dap/draft-ietf-ppm-dap.html.  Status
+   information for this document may be found at
+   https://datatracker.ietf.org/doc/draft-ietf-ppm-dap/.
+
+   Discussion of this document takes place on the Privacy Preserving
+   Measurement Working Group mailing list (mailto:ppm@ietf.org), which
+   is archived at https://mailarchive.ietf.org/arch/browse/ppm/.
 
    Source for this draft and an issue tracker can be found at
-   https://github.com/ietf-wg-ppm/ppm-specification.
+   https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap.
 
 Status of This Memo
 
@@ -54,7 +60,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 November 2022.
+   This Internet-Draft will expire on 25 December 2022.
 
 Copyright Notice
 
@@ -73,20 +79,19 @@ Copyright Notice
 Table of Contents
 
    1.  Introduction
-     1.1.  DISCLAIMER
-     1.2.  Conventions and Definitions
+     1.1.  Conventions and Definitions
    2.  Overview
      2.1.  System Architecture
      2.2.  Validating Inputs
    3.  Message Transport
      3.1.  Errors
+     3.2.  HTTPS Sender Authentication
    4.  Protocol Definition
      4.1.  Task Configuration
      4.2.  Uploading Reports
-       4.2.1.  Key Configuration Request
+       4.2.1.  HPKE Configuration Request
        4.2.2.  Upload Request
        4.2.3.  Upload Extensions
-       4.2.4.  Leader State
      4.3.  Verifying and Aggregating Reports
        4.3.1.  Aggregate Initialization
        4.3.2.  Aggregate Continuation
@@ -124,18 +129,18 @@ Table of Contents
        6.8.1.  Data types
    7.  IANA Considerations
      7.1.  Protocol Message Media Types
-       7.1.1.  "application/ppm-hpke-config" media type
-       7.1.2.  "message/ppm-report" media type
-       7.1.3.  "message/ppm-aggregate-continue-req" media type
-       7.1.4.  "message/ppm-aggregate-init-resp" media type
-       7.1.5.  "message/ppm-aggregate-continue-req" media type
-       7.1.6.  "message/ppm-aggregate-continue-resp" media type
-       7.1.7.  "message/ppm-aggregate-share-req" media type
-       7.1.8.  "message/ppm-aggregate-share-resp" media type
-       7.1.9.  "message/ppm-collect-req" media type
-       7.1.10. "message/ppm-collect-req" media type
+       7.1.1.  "application/dap-hpke-config" media type
+       7.1.2.  "message/dap-report" media type
+       7.1.3.  "message/dap-aggregate-continue-req" media type
+       7.1.4.  "message/dap-aggregate-initialize-resp" media type
+       7.1.5.  "message/dap-aggregate-continue-req" media type
+       7.1.6.  "message/dap-aggregate-continue-resp" media type
+       7.1.7.  "message/dap-aggregate-share-req" media type
+       7.1.8.  "message/dap-aggregate-share-resp" media type
+       7.1.9.  "message/dap-collect-req" media type
+       7.1.10. "message/dap-collect-req" media type
      7.2.  Upload Extension Registry
-     7.3.  URN Sub-namespace for PPM (urn:ietf:params:ppm)
+     7.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
    8.  Acknowledgements
    9.  References
      9.1.  Normative References
@@ -153,13 +158,7 @@ Table of Contents
    long as at least one of them executes the protocol honestly, no input
    is ever seen in the clear by any server.
 
-1.1.  DISCLAIMER
-
-   This document is a work in progress.  We have not yet settled on the
-   design of the protocol framework or the set of features we intend to
-   support.
-
-1.2.  Conventions and Definitions
+1.1.  Conventions and Definitions
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
@@ -200,7 +199,7 @@ Table of Contents
       protocol input.
 
    Minimum batch duration:  The minimum batch duration permitted for a
-      PPM task, i.e., the minimum time difference between the oldest and
+      DAP task, i.e., the minimum time difference between the oldest and
       newest report in a batch.
 
    Minimum batch size:  The minimum number of reports in a batch.
@@ -228,7 +227,7 @@ Table of Contents
    Server:  An aggregator.
 
    This document uses the presentation language of [RFC8446] to define
-   messages in the PPM protocol.  Encoding and decoding of these
+   messages in the DAP protocol.  Encoding and decoding of these
    messages as byte strings also follows [RFC8446].
 
 2.  Overview
@@ -237,19 +236,19 @@ Table of Contents
    servers.  We call the servers the _aggregators_. Each client's input
    to the protocol is a set of measurements (e.g., counts of some user
    behavior).  Given the input set of measurements x_1, ..., x_n held by
-   n users, the goal of a _privacy preserving measurement (PPM)
-   protocol_ is to compute y = F(p, x_1, ..., x_n) for some function F
-   while revealing nothing else about the measurements.
+   n users, the goal of a protocol for privacy preserving measurement is
+   to compute y = F(p, x_1, ..., x_n) for some function F while
+   revealing nothing else about the measurements.
 
    This protocol is extensible and allows for the addition of new
    cryptographic schemes that implement the VDAF interface specified in
    [VDAF].  Candidates include:
 
-   *  prio3, which allows for aggregate statistics such as sum, mean,
+   *  Prio3, which allows for aggregate statistics such as sum, mean,
       histograms, etc.  This class of VDAFs is based on Prio [CGB17] and
       includes improvements described in [BBCGGI19].
 
-   *  poplar1, which allows for finding the most popular strings among a
+   *  Poplar1, which allows for finding the most popular strings among a
       collection of clients (e.g., the URL of their home page) as well
       as counting the number of clients that hold a given string.  This
       VDAF is the basis of the Poplar protocol of [BBCGGI21], which is
@@ -298,7 +297,7 @@ Table of Contents
                        Figure 1: System Architecture
 
    [[OPEN ISSUE: This shows two helpers, but the document only allows
-   one for now. https://github.com/ietf-wg-ppm/ppm-specification/
+   one for now. https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/
    issues/117]]
 
    The main participants in the protocol are as follows:
@@ -308,7 +307,7 @@ Table of Contents
       a single collector.
 
    Client(s):  The endpoints which directly take the measurement(s) and
-      report them to the PPM system.  In order to provide reasonable
+      report them to the DAP protocol.  In order to provide reasonable
       levels of privacy, there must be a large number of clients.
 
    Aggregator:  An endpoint which receives report shares.  Each
@@ -327,7 +326,7 @@ Table of Contents
       helpers can be relatively lightweight, with most of the state held
       at the leader.
 
-   The basic unit of PPM is the "task" which represents a single
+   The basic unit of DAP is the "task" which represents a single
    measurement (though potentially taken over multiple time windows).
    The definition of a task includes the following parameters:
 
@@ -368,7 +367,7 @@ Table of Contents
 2.2.  Validating Inputs
 
    An essential task of any data collection pipeline is ensuring that
-   the data being aggregated is "valid".  In PPM, input validation is
+   the data being aggregated is "valid".  In DAP, input validation is
    complicated by the fact that none of the entities other than the
    client ever sees the values for individual clients.
 
@@ -384,7 +383,7 @@ Table of Contents
    To facilitiate this computation, the input shares generated by the
    client include information used by the aggregators during aggregation
    in order to validate their corresponding output shares.  For example,
-   prio3 includes a distributed zero-knowledge proof of the input's
+   Prio3 includes a distributed zero-knowledge proof of the input's
    validity [BBCGGI19] which the aggregators can jointly verify and
    reject the report if it cannot be verified.  However, they do not
    learn anything about the individual report other than that it is
@@ -401,76 +400,118 @@ Table of Contents
    It is important to recognize that "validity" is distinct from
    "correctness".  For instance, the user might have spent 30s on a task
    but the client might report 60s.  This is a problem with any
-   measurement system and PPM does not attempt to address it; it merely
+   measurement system and DAP does not attempt to address it; it merely
    ensures that the data is within acceptable limits, so the client
    could not report 10^6s or -20s.
 
 3.  Message Transport
 
-   Communications between PPM entities are carried over HTTPS [RFC2818].
-   HTTPS provides server authentication and confidentiality.  In
-   addition, report shares are encrypted directly to the aggregators
-   using HPKE [I-D.irtf-cfrg-hpke].
+   Communications between DAP entities are carried over HTTPS [RFC2818].
+   HTTPS provides server authentication and confidentiality.  When
+   client authenticaiton is also required, the client uses the mechanism
+   described in Section 3.2.
 
 3.1.  Errors
 
-   Errors can be reported in PPM both at the HTTP layer and within
-   challenge objects as defined in Section 7.  PPM servers can return
+   Errors can be reported in DAP both at the HTTP layer and within
+   challenge objects as defined in Section 7.  DAP servers can return
    responses with an HTTP error response code (4XX or 5XX).  For
    example, if the client submits a request using a method not allowed
-   in this document, then the server MAY return status code 405 (Method
-   Not Allowed).
+   in this document, then the server MAY return HTTP status code 405
+   Method Not Allowed.
 
    When the server responds with an error status, it SHOULD provide
    additional information using a problem document [RFC7807].  To
    facilitate automatic response to errors, this document defines the
-   following standard tokens for use in the "type" field (within the PPM
-   URN namespace "urn:ietf:params:ppm:error:"):
+   following standard tokens for use in the "type" field (within the DAP
+   URN namespace "urn:ietf:params:ppm:dap:error:"):
 
-     +=====================+=========================================+
-     | Type                | Description                             |
-     +=====================+=========================================+
-     | unrecognizedMessage | The message type for a response was     |
-     |                     | incorrect or the payload was malformed. |
-     +---------------------+-----------------------------------------+
-     | unrecognizedTask    | An endpoint received a message with an  |
-     |                     | unknown task ID.                        |
-     +---------------------+-----------------------------------------+
-     | outdatedConfig      | The message was generated using an      |
-     |                     | outdated configuration.                 |
-     +---------------------+-----------------------------------------+
-     | batchInvalid        | A collect or aggregate-share request    |
-     |                     | was made with invalid batch parameters. |
-     +---------------------+-----------------------------------------+
-     | batchMismatch       | Aggregators disagree on the report      |
-     |                     | shares that were aggregated in a batch. |
-     +---------------------+-----------------------------------------+
+    +=======================+=========================================+
+    | Type                  | Description                             |
+    +=======================+=========================================+
+    | unrecognizedMessage   | The message type for a response was     |
+    |                       | incorrect or the payload was malformed. |
+    +-----------------------+-----------------------------------------+
+    | unrecognizedTask      | An endpoint received a message with an  |
+    |                       | unknown task ID.                        |
+    +-----------------------+-----------------------------------------+
+    | outdatedConfig        | The message was generated using an      |
+    |                       | outdated configuration.                 |
+    +-----------------------+-----------------------------------------+
+    | reportTooLate         | Report could not be processed because   |
+    |                       | it arrived too late.                    |
+    +-----------------------+-----------------------------------------+
+    | reportTooEarly        | Report could not be processed because   |
+    |                       | its timestamp is too far in the future. |
+    +-----------------------+-----------------------------------------+
+    | batchInvalid          | A collect or aggregate-share request    |
+    |                       | was made with invalid batch parameters. |
+    +-----------------------+-----------------------------------------+
+    | insufficientBatchSize | There are not enough reports in the     |
+    |                       | batch interval to satisfy the task's    |
+    |                       | minimum batch size.                     |
+    +-----------------------+-----------------------------------------+
+    | batchLifetimeExceeded | The batch lifetime has been exceeded    |
+    |                       | for one or more reports included in the |
+    |                       | batch interval.                         |
+    +-----------------------+-----------------------------------------+
+    | batchMismatch         | Aggregators disagree on the report      |
+    |                       | shares that were aggregated in a batch. |
+    +-----------------------+-----------------------------------------+
+    | unauthorizedRequest   | Authentication of an HTTP request       |
+    |                       | failed (see Section 3.2).               |
+    +-----------------------+-----------------------------------------+
 
                                   Table 1
 
    This list is not exhaustive.  The server MAY return errors set to a
-   URI other than those defined above.  Servers MUST NOT use the PPM URN
+   URI other than those defined above.  Servers MUST NOT use the DAP URN
    namespace for errors not listed in the appropriate IANA registry (see
    Section 7.3).  Clients SHOULD display the "detail" field of all
    errors.  The "instance" value MUST be the endpoint to which the
    request was targeted.  The problem document MUST also include a
-   "taskid" member which contains the associated PPM task ID, encoded
-   with base64 using the standard alphabet [RFC4648] (this value is
-   always known, see Section 4.1).
+   "taskid" member which contains the associated DAP task ID (this value
+   is always known, see Section 4.1), encoded in Base 64 using the URL
+   and filename safe alphabet with no padding defined in sections 5 and
+   3.2 of [RFC4648].
 
    In the remainder of this document, we use the tokens in the table
    above to refer to error types, rather than the full URNs.  For
    example, an "error of type 'unrecognizedMessage'" refers to an error
    document with "type" value
-   "urn:ietf:params:ppm:error:unrecognizedMessage".
+   "urn:ietf:params:ppm:dap:error:unrecognizedMessage".
 
    This document uses the verbs "abort" and "alert with [some error
    message]" to describe how protocol participants react to various
    error conditions.
 
+3.2.  HTTPS Sender Authentication
+
+   Some HTTP requests in the DAP protocol require the sender to
+   authenticate its request.  It does so as described here.
+
+   Prior to the start of the protocol, the sender and receiver arrange
+   to share a secret sender-specific API token, which MUST be suitable
+   for representation in an HTTP header.
+
+   For requests requiring authentication, the sender includes a "DAP-
+   Auth-Token" header in its HTTP request containing the API token.
+
+   To authenticate the request, the receiver looks up the token for the
+   sender as determined by the task configuration.  (See Section 4.1.)
+   If the value of the "DAP-Auth-Token" header does not match the token,
+   then the receiver MUST abort with error "unauthorizedRequest" and
+   HTTP status code 403 Forbidden.
+
+   [OPEN ISSUE: This simple bearer-token scheme is meant to unblock
+   interop testing.  Eventually it should be replaced with a more secure
+   authentication mechanism, e.g., TLS client certificates.  See
+   https://mailarchive.ietf.org/arch/msg/ppm/
+   z65FK8kOU27Dt38WNhpI6apc2so/ for details.]
+
 4.  Protocol Definition
 
-   PPM has three major interactions which need to be defined:
+   DAP has three major interactions which need to be defined:
 
    *  Uploading reports from the client to the aggregators, specified in
       Section 4.2
@@ -496,7 +537,7 @@ struct {
   Duration duration;
 } Interval;
 
-/* A nonce used to uniquely identify a report in the context of a PPM task. It
+/* A nonce used to uniquely identify a report in the context of a DAP task. It
 includes the time at which the report was generated and a random, 64-bit
 integer. */
 struct {
@@ -504,7 +545,7 @@ struct {
   uint64 rand;
 } Nonce;
 
-/* The various roles in the PPM protocol. */
+/* The various roles in the DAP protocol. */
 enum {
   collector(0),
   client(1),
@@ -518,7 +559,7 @@ uint8 HpkeConfigId;
 /* An HPKE ciphertext. */
 struct {
   HpkeConfigId config_id;    // config ID
-  opaque enc<1..2^16-1>;     // encapsulated HPKE context
+  opaque enc<1..2^16-1>;     // encapsulated HPKE key
   opaque payload<1..2^16-1>; // ciphertext
 } HpkeCiphertext;
 
@@ -565,8 +606,13 @@ struct {
 
    *  vdaf_verify_param: The aggregator's VDAF verification parameter
       output by the setup algorithm computed jointly by the aggregators
-      before the start of the PPM protocol [VDAF]).  [OPEN ISSUE: This
+      before the start of the DAP protocol [VDAF]).  [OPEN ISSUE: This
       is yet to be specified.  See issue#161.]
+
+   The helper stores a bearer token used to authenticate HTTP requests
+   from the leader.  Likewise, the leader stores a bearer token to
+   authenticate HTTP request from the collector.  The authentication
+   mechanism is described in Section 3.2.
 
    Finally, the collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
@@ -576,14 +622,24 @@ struct {
    Clients periodically upload reports to the leader, which then
    distributes the individual shares to each helper.
 
-4.2.1.  Key Configuration Request
+4.2.1.  HPKE Configuration Request
 
    Before the client can upload its report to the leader, it must know
    the public key of each of the aggregators.  These are retrieved from
-   each aggregator by sending a request to [aggregator]/key_config,
-   where [aggregator] is the aggregator's endpoint URL, obtained from
-   the task parameters.  The aggregator responds to well-formed requests
-   with status 200 and an HpkeConfig value:
+   each aggregator by sending an HTTP GET request to
+   [aggregator]/hpke_config?task_id=[task-id], where [aggregator] is the
+   aggregator's endpoint URL, obtained from the task parameters, and
+   [task-id] is the task ID obtained from the task parameters, encoded
+   in Base 64 with URL and filename safe alphabet with no padding, as
+   specified in sections 5 and 3.2 of [RFC4648].  If the aggregator does
+   not recognize the task ID, then it responds with HTTP status code 404
+   Not Found and an error of type unrecognizedTask.  The aggregator
+   responds to well-formed requests with HTTP status code 200 OK and an
+   HpkeConfig value:
+
+   [TODO: Allow aggregators to return HTTP status code 403 Forbidden in
+   deployments that use authentication to avoid leaking information
+   about which tasks exist.]
 
    struct {
      HpkeConfigId id;
@@ -594,23 +650,24 @@ struct {
    } HpkeConfig;
 
    opaque HpkePublicKey<1..2^16-1>;
-   uint16 HpkeAeadId; // Defined in I-D.irtf-cfrg-hpke
-   uint16 HpkeKemId;  // Defined in I-D.irtf-cfrg-hpke
-   uint16 HpkeKdfId;  // Defined in I-D.irtf-cfrg-hpke
+   uint16 HpkeAeadId; // Defined in RFC9180
+   uint16 HpkeKemId;  // Defined in RFC9180
+   uint16 HpkeKdfId;  // Defined in RFC9180
 
    [OPEN ISSUE: Decide whether to expand the width of the id, or support
    multiple cipher suites (a la OHTTP/ECH).]
 
-   The client MUST abort if any of the following happen for any
-   key_config request:
+   The client MUST abort if any of the following happen for any HPKE
+   config request:
 
    *  the client and aggregator failed to establish a secure,
       aggregator-authenticated channel;
 
-   *  the GET request failed or didn't return a valid key config; or
+   *  the GET request failed or didn't return a valid HPKE
+      configuration; or
 
-   *  the key config specifies a KEM, KDF, or AEAD algorithm the client
-      doesn't recognize.
+   *  the HPKE configuration specifies a KEM, KDF, or AEAD algorithm the
+      client doesn't recognize.
 
    Aggregators SHOULD use HTTP caching to permit client-side caching of
    this resource [RFC5861].  Aggregators SHOULD favor long cache
@@ -662,41 +719,30 @@ struct {
 
    To generate the report, the client begins by sharding its measurement
    into a sequence of input shares as specified by the VDAF in use.  To
-   encrypt an input share, the client first generates an HPKE
-   [I-D.irtf-cfrg-hpke] context for the aggregator by running
+   encrypt an input share, the client generates an HPKE [RFC9180]
+   ciphertext and encapsulated key for the aggregator by running
 
- enc, context = SetupBaseS(pk, Report.task_id || "ppm-00 input share" ||
-                               0x01 || server_role)
+enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
+    task_id || nonce || extensions, input_share)
 
-   where pk is the aggregator's public key and server_role is the Role
-   of the intended recipient (0x02 for the leader and 0x03 for the
-   helper).  In general, the info string for computing the HPKE context
-   is suffixed by two bytes, the first of which identifies the role of
-   the sender and the second of which identifies the role of the
-   intended recipient.
-
-   enc is the HPKE encapsulated key and context is the HPKE context used
-   by the client for encryption.  The payload is encrypted as
-
-   payload = context.Seal(nonce || extensions, input_share)
-
-   where input_share is the aggregator's input share and nonce and
-   extensions are the corresponding fields of Report.  Clients MUST NOT
-   use the same enc for multiple reports.
+   where pk is the aggregator's public key; server_role is the Role of
+   the intended recipient (0x02 for the leader and 0x03 for the helper);
+   task_id, nonce, and extensions are the corresponding fields of
+   Report; and input_share is the aggregator's input share.
 
    The leader responds to well-formed requests to [leader]/upload with
-   status 200 and an empty body.  Malformed requests are handled as
-   described in Section 3.1.  Clients SHOULD NOT upload the same
-   measurement value in more than one report if the leader responds with
-   status 200 and an empty body.
+   HTTP status code 200 OK and an empty body.  Malformed requests are
+   handled as described in Section 3.1.  Clients SHOULD NOT upload the
+   same measurement value in more than one report if the leader responds
+   with HTTP status code 200 OK and an empty body.
 
    The leader responds to requests whose leader encrypted input share
    uses an out-of-date HpkeConfig.id value, indicated by
-   HpkeCiphertext.config_id, with status 400 and an error of type
-   'outdatedConfig'.  Clients SHOULD invalidate any cached aggregator
-   HpkeConfig and retry with a freshly generated Report.  If this
-   retried report does not succeed, clients MUST abort and discontinue
-   retrying.
+   HpkeCiphertext.config_id, with HTTP status code 400 Bad Request and
+   an error of type 'outdatedConfig'.  Clients SHOULD invalidate any
+   cached aggregator HpkeConfig and retry with a freshly generated
+   Report.  If this retried report does not succeed, clients MUST abort
+   and discontinue retrying.
 
    The leader MUST ignore any report whose nonce contains a timestamp
    that falls in a batch interval for which it has received at least one
@@ -704,7 +750,14 @@ struct {
    comparing the aggregate result to the previous aggregate result may
    result in a privacy violation.  (Note that the helpers enforce this
    as well; see Section 4.4.)  In addition, the leader SHOULD abort the
-   upload protocol and alert the client with error "staleReport".
+   upload protocol and alert the client with error "reportTooLate".
+
+   Leaders can buffer reports while waiting to aggregate them.  The
+   leader SHOULD NOT accept reports whose timestamps are too far in the
+   future.  Implementors MAY provide for some small leeway, usually no
+   more than a few minutes, to account for clock skew.  If the leader
+   rejects a report for this reason, it SHOULD abort the upload protocol
+   and alert the client with error "reportTooEarly".
 
 4.2.3.  Upload Extensions
 
@@ -729,13 +782,6 @@ struct {
    "extension_type" indicates the type of extension, and
    "extension_data" contains information specific to the extension.
 
-4.2.4.  Leader State
-
-   The leader MUST buffer reports while waiting to aggregate them.  The
-   leader SHOULD NOT accept reports whose timestamps are too far in the
-   future.  Implementors MAY provide for some small leeway, usually no
-   more than a few minutes, to account for clock skew.
-
 4.3.  Verifying and Aggregating Reports
 
    Once a set of clients have uploaded their reports to the leader, the
@@ -743,9 +789,9 @@ struct {
    In order to enable the system to handle very large batches of
    reports, this process can be performed incrementally.  Verification
    of a set of reports is referred to as an aggregation job.  Each
-   aggregation job is associated with exactly one PPM task, and a PPM
+   aggregation job is associated with exactly one DAP task, and a DAP
    task can have many aggregation jobs.  Each job is associated with an
-   ID that is unique within the context of a PPM task in order to
+   ID that is unique within the context of a DAP task in order to
    distinguish different jobs from one another.  Each aggregator uses
    this ID as an index into per-job storage, e.g., to keep track of
    report shares that belong to a given aggregation job.
@@ -758,9 +804,9 @@ struct {
    The exact structure of the aggregation job flow depends on the VDAF.
    Specifically:
 
-   *  Some VDAFs (e.g., prio3) allow the leader to start aggregating
+   *  Some VDAFs (e.g., Prio3) allow the leader to start aggregating
       reports proactively before all the reports in a batch are
-      received.  Others (e.g., poplar1) require all the reports to be
+      received.  Others (e.g., Poplar1) require all the reports to be
       present and must be initiated by the collector.
 
    *  Processing the reports -- especially validating them -- may
@@ -773,12 +819,6 @@ struct {
    This process is illustrated below in Figure 2.  In this example, the
    batch size is 20, but the leader opts to process the reports in sub-
    batches of 10.  Each sub-batch takes two round-trips to process.
-
-   In order to allow the helpers to retain minimal state, the helper can
-   attach a state parameter to its response, with the leader returning
-   the state value in the next request, thus offloading the state to the
-   leader.  This state value MUST be cryptographically protected as
-   described in Section 4.3.1.
 
    Leader                                                 Helper
 
@@ -819,7 +859,7 @@ struct {
 4.3.1.  Aggregate Initialization
 
    The leader begins an aggregation job by choosing a set of candidate
-   reports that pertain to the same PPM task and a unique job ID.  The
+   reports that pertain to the same DAP task and a unique job ID.  The
    job ID is a 32-byte value, structured as follows:
 
    opaque AggregationJobID[32];
@@ -854,7 +894,7 @@ struct {
    candidate report shares as follows:
 
    1.  Generate a fresh AggregationJobID.  This ID MUST be unique within
-       the context of the corresponding PPM task.  It is RECOMMENDED
+       the context of the corresponding DAP task.  It is RECOMMENDED
        that this be set to a random string output by a cryptographically
        secure pseudorandom number generator.
 
@@ -869,9 +909,9 @@ struct {
    If any step yields an invalid report share, the leader removes the
    report share from the set of candidate reports.  Once the leader has
    initialized this state for all valid candidate report shares, it then
-   creates an AggregateInitReq message for each helper to initialize the
-   preparation of this candidate set.  The AggregateInitReq message is
-   structured as follows:
+   creates an AggregateInitializeReq message for each helper to
+   initialize the preparation of this candidate set.  The
+   AggregateInitializeReq message is structured as follows:
 
    struct {
      Nonce nonce;
@@ -884,7 +924,7 @@ struct {
      AggregationJobID job_id;
      opaque agg_param<0..2^16-1>;
      ReportShare report_shares<1..2^16-1>;
-   } AggregateInitReq;
+   } AggregateInitializeReq;
 
    [[OPEN ISSUE: consider sending report shares separately (in parallel)
    to the aggregate instructions.  RIght now, aggregation parameters and
@@ -895,31 +935,32 @@ struct {
    Report uploaded by the client.  The encrypted_input_share field is
    the HpkeCiphertext whose index in Report.encrypted_input_shares is
    equal to the index of the aggregator in the task's
-   aggregator_endpoints to which the AggregateInitReq is being sent.
-   The agg_param field is an opaque, VDAF-specific aggregation
+   aggregator_endpoints to which the AggregateInitializeReq is being
+   sent.  The agg_param field is an opaque, VDAF-specific aggregation
    parameter.  The job_id parameter contains the leader's chosen
    AggregationJobID.
 
    Let [aggregator] denote the helper's API endpoint.  The leader sends
-   a POST request to [aggregator]/aggregate with its AggregateInitReq
-   message as the payload.  The media type is "message/ppm-aggregate-
-   init-req".
+   a POST request to [aggregator]/aggregate with its
+   AggregateInitializeReq message as the payload.  The media type is
+   "message/dap-aggregate-initialize-req".  In addition, this request
+   MUST be authenticated as described in Section 3.2.
 
 4.3.1.2.  Helper Initialization
 
    Each helper begins their portion of the aggregate initialization
    phase with the set of candidate report shares obtained in an
-   AggregateInitReq message from the leader.  It attempts to recover and
-   validate the corresponding input shares similar to the leader, and
-   eventually returns a response to the leader carrying a VDAF-specific
-   message for each report share.
+   AggregateInitializeReq message from the leader.  It attempts to
+   recover and validate the corresponding input shares similar to the
+   leader, and eventually returns a response to the leader carrying a
+   VDAF-specific message for each report share.
 
    To begin this process, the helper first checks that the nonces in
-   AggregateInitReq.report_shares are all distinct.  If two ReportShare
-   values have the same nonce, then the helper MUST abort with error
-   "unrecognizedMessage".  If this check succeeds, the helper then
-   attempts to recover each input share in
-   AggregateInitReq.report_shares as follows:
+   AggregateInitializeReq.report_shares are all distinct.  If two
+   ReportShare values have the same nonce, then the helper MUST abort
+   with error "unrecognizedMessage".  If this check succeeds, the helper
+   then attempts to recover each input share in
+   AggregateInitializeReq.report_shares as follows:
 
    1.  Decrypt the input share for each report share as described in
        Section 4.3.1.3.
@@ -934,8 +975,8 @@ struct {
    share-batch-validation]]
 
    Once the helper has processed each valid report share in
-   AggregateInitReq.report_shares, the helper then creates an
-   AggregateInitResp message to complete its initialization.  This
+   AggregateInitializeReq.report_shares, the helper then creates an
+   AggregateInitializeResp message to complete its initialization.  This
    message is structured as follows:
 
 enum {
@@ -957,27 +998,27 @@ struct {
 struct {
   AggregationJobID job_id;
   PrepareStep prepare_steps<1..2^16-1>;
-} AggregateInitResp;
+} AggregateInitializeResp;
 
-   The job_id parameter is equal to AggregateInitReq.job_id.  The rest
-   of the message is a sequence of PrepareStep values, the order of
+   The job_id parameter is equal to AggregateInitializeReq.job_id.  The
+   rest of the message is a sequence of PrepareStep values, the order of
    which matches that of the ReportShare values in
-   AggregateInitReq.report_shares.  Each report that was marked as
+   AggregateInitializeReq.report_shares.  Each report that was marked as
    invalid is assigned the PrepareStepResult failed.  Otherwise, the
    PrepareStep is either marked as continued with the output prep_msg,
    or is marked as finished if the VDAF preparation process is finished
    for the report share.
 
-   The helper's response to the leader is an HTTP 200 OK whose body is
-   the AggregateInitResp and media type is "message/ppm-aggregate-init-
-   resp".
+   The helper's response to the leader is an HTTP status code 200 OK
+   whose body is the AggregateInitializeResp and media type is "message/
+   dap-aggregate-initialize-resp".
 
-   Upon receipt of a helper's AggregateInitResp message, the leader
-   checks that the sequence of PrepareStep messages corresponds to the
-   ReportShare sequence of the AggregateInitReq.  If any message appears
-   out of order, is missing, has an unrecognized nonce, or if two
-   messages have the same nonce, then the leader MUST abort with error
-   "unrecognizedMessage".
+   Upon receipt of a helper's AggregateInitializeResp message, the
+   leader checks that the sequence of PrepareStep messages corresponds
+   to the ReportShare sequence of the AggregateInitializeReq.  If any
+   message appears out of order, is missing, has an unrecognized nonce,
+   or if two messages have the same nonce, then the leader MUST abort
+   with error "unrecognizedMessage".
 
    [[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom
    does it abort?]]
@@ -994,18 +1035,15 @@ struct {
    report share as invalid with the error hpke-unknown-config-id.
    Otherwise, it decrypts the payload with the following procedure:
 
-   context = SetupBaseR(encrypted_input_share.enc, sk, task_id ||
-                        "ppm-00 input share" || 0x01 || server_role)
+input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
+    0x01 || server_role, task_id || nonce || extensions,
+    encrypted_input_share.payload)
 
-   input_share = context.Open(nonce || extensions,
-                              encrypted_input_share.payload)
-
-   where sk is the HPKE secret key, task_id is the task ID, nonce and
-   extensions are the nonce and extensions of the report share
-   respectively, and server_role is 0x02 if the aggregator is the leader
-   and 0x03 otherwise.  If decryption fails, the aggregator marks the
-   report share as invalid with the error hpke-decrypt-error.
-   Otherwise, it outputs the resulting input_share.
+   where sk is the HPKE secret key, and server_role is the role of the
+   aggregator (0x02 for the leader and 0x03 for the helper).  If
+   decryption fails, the aggregator marks the report share as invalid
+   with the error hpke-decrypt-error.  Otherwise, it outputs the
+   resulting input_share.
 
 4.3.1.4.  Input Share Validation
 
@@ -1111,7 +1149,8 @@ out = VDAF.prep_next(prep_state, inbound)
    AggregateContinueReq.task_id's parameters except its own, the leader
    sends a POST request to [aggregator]/aggregate with
    AggregateContinueReq as the payload and the media type set to
-   "message/ppm-aggregate-continue-req".
+   "message/dap-aggregate-continue-req".  In addition, this request MUST
+   be authenticated as described in Section 3.2.
 
 4.3.2.2.  Helper Continuation
 
@@ -1167,10 +1206,10 @@ out = VDAF.prep_next(prep_state, inbound)
 
    The order of AggregateContinueResp.prepare_shares MUST match that of
    the PrepareStep values in AggregateContinueReq.prepare_shares.  The
-   helper's response to the leader is an HTTP 200 OK whose body is the
-   AggregateContinueResp and media type is "message/ppm-aggregate-
-   continue-resp".  The helper then awaits the next message from the
-   leader.
+   helper's response to the leader is an HTTP status code 200 OK whose
+   body is the AggregateContinueResp and media type is "message/dap-
+   aggregate-continue-resp".  The helper then awaits the next message
+   from the leader.
 
    [[OPEN ISSUE: consider relaxing this ordering constraint.  See
    issue#217.]]
@@ -1180,7 +1219,7 @@ out = VDAF.prep_next(prep_state, inbound)
    In this phase, the collector requests aggregate shares from each
    aggregator and then locally combines them to yield a single,
    aggregate output.  In particular, the collector asks the leader to
-   collect and return the results for a given PPM task over a given time
+   collect and return the results for a given DAP task over a given time
    period.  The aggregate shares are encrypted to the collector so that
    it can decrypt and combine them to yield the aggregate output.  This
    entire process is composed of two interactions:
@@ -1198,7 +1237,8 @@ out = VDAF.prep_next(prep_state, inbound)
 
    To initiate collection, the collector issues a POST request to
    [leader]/collect, where [leader] is the leader's endpoint URL.  The
-   body of the request is structured as follows:
+   request MUST be authenticated as described in Section 3.2.  The body
+   of the request is structured as follows:
 
    [OPEN ISSUE: Decide if and how the collector's request is
    authenticated.  If not, then we need to ensure that collect job URIs
@@ -1212,7 +1252,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    The named parameters are:
 
-   *  task_id, the PPM task ID.
+   *  task_id, the DAP task ID.
 
    *  batch_interval, the request's batch interval.
 
@@ -1248,8 +1288,8 @@ out = VDAF.prep_next(prep_state, inbound)
    aggregator, the leader invokes the aggregate share request flow
    described in Section 4.4.2.  Otherwise, when all aggregator shares
    are successfully obtained, the leader responds to subsequent HTTP GET
-   requests to the collect job's URI with HTTP status 200 OK and a body
-   consisting of a CollectResp:
+   requests to the collect job's URI with HTTP status code 200 OK and a
+   body consisting of a CollectResp:
 
    struct {
      HpkeCiphertext encrypted_agg_shares<1..2^16-1>;
@@ -1295,25 +1335,25 @@ out = VDAF.prep_next(prep_state, inbound)
    struct {
      TaskID task_id;
      Interval batch_interval;
+     opaque agg_param<0..2^16-1>;
      uint64 report_count;
      opaque checksum[32];
-     AggregationJobID job_id;
    } AggregateShareReq;
 
-   *  task_id is the task ID associated with the PPM parameters.
+   *  task_id is the task ID associated with the DAP parameters.
 
    *  batch_interval is the batch interval of the request.
+
+   *  agg_param, an aggregation parameter for the VDAF being executed.
 
    *  report_count is the number of reports included in the aggregation.
 
    *  checksum is the checksum computed over the set of client reports.
 
-   *  job_id is the ID of the aggregation job.
-
-   To handle the leader's request, the helper first ensures that the
+   This request MUST be authenticated as described in Section 3.2.  To
+   handle the leader's request, the helper first ensures that the
    request meets the requirements for batch parameters following the
-   procedure in Section 4.4.5.  If the batch parameters are invalid,
-   then it MUST abort with error "batchInvalid".
+   procedure in Section 4.4.5.
 
    Next, it computes a checksum based on its view of the output shares
    included in the batch window, and checks that the report_count and
@@ -1337,8 +1377,8 @@ out = VDAF.prep_next(prep_state, inbound)
    Encryption prevents the leader from learning the actual result, as it
    only has its own aggregate share and cannot compute the helper's.
 
-   The helper responds to the leader with HTTP status 200 OK and a body
-   consisting of an AggregateShareResp:
+   The helper responds to the leader with HTTP status code 200 OK and a
+   body consisting of an AggregateShareResp:
 
    struct {
        HpkeCiphertext encrypted_aggregate_share;
@@ -1384,26 +1424,21 @@ out = VDAF.prep_next(prep_state, inbound)
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
 
-enc, context = SetupBaseS(pk, AggregateShareReq.task_id ||
-                              "ppm-00 aggregate share" || server_role || 0x00)
-
-encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
-                                   agg_share)
+enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
+  AggregateShareReq.task_id || AggregateShareReq.batch_interval, agg_share)
 
    where pk is the HPKE public key encoded by the collector's HPKE key,
-   and server_role is is 0x02 for the leader and 0x03 for a helper.
+   server_role is 0x02 for the leader and 0x03 for a helper.
 
    The collector decrypts these aggregate shares using the opposite
    process.  Specifically, given an encrypted input share, denoted
    enc_share, for a given batch interval, denoted batch_interval,
    decryption works as follows:
 
-   context = SetupBaseR(enc_share.enc, sk,
-                        "ppm-00 aggregate share" ||
-                        task_id || server_role || 0x00)
-   agg_share = context.Open(batch_interval, enc_share.payload)
+  agg_share = OpenBase(enc_share.enc, sk, "dap-01 aggregate share" ||
+      server_role || 0x00, task_id || batch_interval, enc_share.payload)
 
-   where sk is the HPKE secret key, task_id is the task ID for a given
+   where sk is the HPKE secret key, task_id is the task ID for the
    collect request, and server_role is the role of the server that sent
    the aggregate share (0x02 for the leader and 0x03 for the helper).
 
@@ -1411,37 +1446,50 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Before an aggregator responds to a collect request or aggregate-share
    request, it must first check that the request does not violate the
-   parameters associated with the PPM task.  It does so as described
+   parameters associated with the DAP task.  It does so as described
    here.
 
    First the aggregator checks that the request's batch interval
-   respects the boundaries defined by the PPM task's parameters.
+   respects the boundaries defined by the DAP task's parameters.
    Namely, it checks that both batch_interval.start and
    batch_interval.duration are divisible by min_batch_duration and that
    batch_interval.duration >= min_batch_duration.  Unless both these
-   conditions are true, it aborts and alerts the peer with "invalid
-   batch interval".
+   conditions are true, the aggregator MUST abort and alert its peer
+   with error "batchInvalid".
 
    Next, the aggregator checks that the request respects the generic
-   privacy parameters of the PPM task.  Let X denote the set of reports
+   privacy parameters of the DAP task.  Let X denote the set of reports
    for which the aggregator has recovered a valid output share and which
    fall in the batch interval of the request.
 
-   *  If len(X) < min_batch_size, then the aggregator aborts and alerts
-      the peer with "insufficient batch size".
+   *  If len(X) < min_batch_size, then the aggregator MUST abort and
+      alert its peer with "insufficientBatchSize".
 
    *  The aggregator keeps track of the number of times each report was
       added to the batch of an AggregateShareReq.  If any report in X
       was added to at least max_batch_lifetime previous batches, then
-      the helper aborts and alerts the peer with "request exceeds the
-      batch's privacy budget".
+      the aggregator MUST abort and alert the peer with
+      "batchLifetimeExceeded".
+
+   Finally, the aggregator checks that the batch interval defined by the
+   collect request satisfies one of the conditions:
+
+   1.  The batch interval does not overlap with the batch interval of
+       any prior completed collect requests.
+
+   2.  The batch interval, including its start and duration values,
+       match a prior completed collect request.
+
+   [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow
+   for more collect query flexibility.  As of now, this is quite rigid
+   and doesn't give the collector much room for mistakes.]]
 
 4.4.6.  Anti-replay
 
    Using a client-provided report multiple times within a single batch,
    or using the same report in multiple batches, may allow a server to
    learn information about the client's measurement, violating the
-   privacy goal of PPM.  To prevent such replay attacks, this
+   privacy goal of DAP.  To prevent such replay attacks, this
    specification requires the aggregators to detect and filter out
    replayed reports.
 
@@ -1450,7 +1498,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    given task.  If the leader receives a report from a client whose
    nonce is in this set, it simply ignores it.  A helper who receives an
    encrypted input share whose nonce is in this set replies to the
-   leader with an error as described in Section 4.4.
+   leader with an error as described in Section 4.3.1.4.
 
    [OPEN ISSUE: This has the potential to require aggreagtors to store
    nonce sests indefinitely.  See issue#180.]
@@ -1467,7 +1515,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
 5.  Operational Considerations
 
-   PPM protocols have inherent constraints derived from the tradeoff
+   The DAP protocol has inherent constraints derived from the tradeoff
    between privacy guarantees and computational complexity.  These
    tradeoffs influence how applications may choose to utilize services
    implementing the specification.
@@ -1505,14 +1553,13 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    *  Publish and manage an HPKE configuration that can be used for the
       upload protocol.
 
-   In addition, for each PPM task, helpers are required to:
+   In addition, for each DAP task, helpers are required to:
 
    *  Implement some form of batch-to-report index, as well as inter-
       and intra-batch replay mitigation storage, which includes some way
-      of tracking batch report size with optional support for state
-      offloading.  Some of this state may be used for replay attack
-      mitigation.  The replay mitigation strategy is described in
-      Section 4.4.6.
+      of tracking batch report size.  Some of this state may be used for
+      replay attack mitigation.  The replay mitigation strategy is
+      described in Section 4.4.6.
 
    Beyond the minimal capabilities required of helpers, leaders are
    generally required to:
@@ -1522,12 +1569,10 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    *  Track batch report size during each collect flow and request
       encrypted output shares from helpers.
 
-   In addition, for each PPM task, leaders are required to:
+   In addition, for each DAP task, leaders are required to:
 
    *  Implement and store state for the form of inter- and intra-batch
       replay mitigation in Section 4.4.6; and
-
-   *  Store helper state.
 
 5.1.3.  Collector capabilities
 
@@ -1585,7 +1630,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
 5.4.  Protocol-specific optimizations
 
-   Not all PPM tasks have the same operational requirements, so the
+   Not all DAP tasks have the same operational requirements, so the
    protocol is designed to allow implementations to reduce operational
    costs in certain cases.
 
@@ -1599,47 +1644,75 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    like Prio in which the input-validation protocol is only run once per
    report, each aggregator only needs to store its aggregate share for
    each possible batch interval, along with the number of times the
-   aggregate share was used in a batch.  (The helper may store its
-   aggregate shares in its encrypted state, thereby offloading this
-   state to the leader.)  This is due to the requirement that the batch
-   interval respect the boundaries defined by the PPM parameters.  (See
-   Section 4.4.5.)
+   aggregate share was used in a batch.  This is due to the requirement
+   that the batch interval respect the boundaries defined by the DAP
+   parameters.  (See Section 4.4.5.)
 
 6.  Security Considerations
 
-   Prio assumes a powerful adversary with the ability to compromise an
-   unbounded number of clients.  In doing so, the adversary can provide
-   malicious (yet truthful) inputs to the aggregation function.  Prio
-   also assumes that all but one server operates honestly, where a
-   dishonest server does not execute the protocol faithfully as
-   specified.  The system also assumes that servers communicate over
-   secure and mutually authenticated channels.  In practice, this can be
-   done by TLS or some other form of application-layer authentication.
+   DAP assumes an active attacker that controls the network and has the
+   ability to statically corrupt any number of clients, aggregators, and
+   collectors.  That is, the attacker can learn the secret state of any
+   party prior to the start of its attack.  For example, it may coerce a
+   client into providing malicious input shares for aggregation or
+   coerce an aggregator into diverting from the protocol specified
+   (e.g., by divulging its input shares to the attacker).
 
-   In the presence of this adversary, Prio provides two important
-   properties for computing an aggregation function F:
+   In the presence of this adversary, DAP aims to achieve the following
+   high-level secure aggregation goals:
 
-   1.  Privacy.  The aggregators and collector learn only the output of
-       F computed over all client inputs, and nothing else.
+   1.  Privacy.  Clients trust that some aggregator is honest.  That is,
+       as long as at least one aggregator executes the protocol
+       faithfully, the parties learn nothing beyond the aggregate result
+       (i.e., the output of the aggregation function computed over the
+       honest measurements).
 
-   2.  Robustness.  As long as the aggregators execute the input-
-       validation protocol correctly, a malicious client can skew the
-       output of F only by reporting false (untruthful) input.  The
-       output cannot be influenced in any other way.
+   2.  Correctness.  The collector trusts that the aggregators execute
+       the protocol correctly.  That is, as long as the aggregators
+       execute the protocol faithfully, a malicious client can skew the
+       aggregate result only by reporting a false (untruthful)
+       measurement.  The result cannot be influenced in any other way.
 
-   There are several additional constraints that a Prio deployment must
-   satisfy in order to achieve these goals:
+   Currently, the specification does not achieve these goals.  In
+   particular, there are several open issues that need to be addressed
+   before these goals are met.  Details for each issue are below.
 
-   1.  Minimum batch size.  The aggregation batch size has an obvious
-       impact on privacy.  (A batch size of one hides nothing of the
-       input.)
+   1.  When crafted maliciously, collect requests may leak more
+       information about the measurements than the system intends.  For
+       example, the spec currently allows sequences of collect requests
+       to reveal an aggregate result for a batch smaller than the
+       minimum batch size.  [OPEN ISSUE: See issue#195.  This also has
+       implications for how we solve issue#183.]
 
-   2.  Aggregation function choice.  Some aggregation functions leak
-       slightly more than the function output itself.
+   2.  Even benign collect requests may leak information beyond what one
+       might expect intuitively.  For example, the Poplar1 VDAF [VDAF]
+       can be used to compute the set of heavy hitters among a set of
+       arbitrary bit strings uploaded by clients.  This requires
+       multiple evaluations of the VDAF, the results of which reveal
+       information to the aggregators and collector beyond what follows
+       from the heavy hitters themselves.  Note that this leakage can be
+       mitigated using differential privacy.  [OPEN ISSUE: We have yet
+       not specified how to add DP.]
 
-   [TODO: discuss these in more detail.]
+   3.  The core DAP spec does not defend against Sybil attacks.  In this
+       type of attack, the adversary adds to a batch a number of reports
+       that skew the aggregate result in its favor.  For example: The
+       result may reveal additional information about the honest
+       measurements, leading to a privacy violation; or the result may
+       have some property that is desirable to the adversary ("stats
+       poisoning").  The upload sub-protocol includes an extensions
+       mechanism that can be used to prevent --- or at least mitigate
+       --- these types of attacks.  See Section 4.2.3.  [OPEN ISSUE: No
+       such extension has been implemented, so we're not yet sure if the
+       current mechanism is sufficient.]
+
+   4.  Attacks may also come from the network.  Thus, it is required
+       that the aggregators and collector communicate with one another
+       over mutually authenticated and confidential channels.
 
 6.1.  Threat model
+
+   [OPEN ISSUE: This subsection is a bit out-of-date.]
 
    In this section, we enumerate the actors participating in the Prio
    system and enumerate their assets (secrets that are either inherently
@@ -1901,29 +1974,29 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    participating clients or permit some attacks on robustness.  This
    auxiliary information could be removed by having clients submit
    reports to an anonymizing proxy server which would then use Oblivous
-   HTTP [I-D.thomson-http-oblivious] to forward inputs to the PPM
-   leader, without requiring any server participating in PPM to be aware
+   HTTP [I-D.thomson-http-oblivious] to forward inputs to the DAP
+   leader, without requiring any server participating in DAP to be aware
    of whatever client authentication or attestation scheme is in use.
 
 6.4.  Batch parameters
 
-   An important parameter of a PPM deployment is the minimum batch size.
+   An important parameter of a DAP deployment is the minimum batch size.
    If an aggregation includes too few inputs, then the outputs can
    reveal information about individual participants.  Aggregators use
    the batch size field of the shared task parameters to enforce minimum
    batch size during the collect protocol, but server implementations
-   may also opt out of participating in a PPM task if the minimum batch
+   may also opt out of participating in a DAP task if the minimum batch
    size is too small.  This document does not specify how to choose
    minimum batch sizes.
 
-   The PPM parameters also specify the maximum number of times a report
+   The DAP parameters also specify the maximum number of times a report
    can be used.  Some protocols, such as Poplar [BBCGGI21], require
    reports to be used in multiple batches spanning multiple collect
    requests.
 
 6.5.  Differential privacy
 
-   Optionally, PPM deployments can choose to ensure their output F
+   Optionally, DAP deployments can choose to ensure their output F
    achieves differential privacy [Vad16].  A simple approach would
    require the aggregators to add two-sided noise (e.g. sampled from a
    two-sided geometric distribution) to outputs.  Since each aggregator
@@ -1942,7 +2015,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
 6.6.  Robustness in the presence of malicious servers
 
-   Most PPM protocols, including Prio and Poplar, are robust against
+   Most DAP protocols, including Prio and Poplar, are robust against
    malicious clients, but are not robust against malicious servers.  Any
    aggregator can simply emit bogus aggregate shares and undetectably
    spoil aggregates.  If enough aggregators were available, this could
@@ -1953,7 +2026,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    aggregator is defective, and it may be possible to identify the
    defector (i.e., if a majority of runs agree, and a single aggregator
    appears in every run that disagrees).  See #22 (https://github.com/
-   ietf-wg-ppm/ppm-specification/issues/22) for discussion.
+   ietf-wg-ppm/draft-ietf-ppm-dap/issues/22) for discussion.
 
 6.7.  Infrastructure diversity
 
@@ -1975,27 +2048,29 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    This specification defines the following protocol messages, along
    with their corresponding media types types:
 
-   *  HpkeConfig Section 4.1: "application/ppm-hpke-config"
+   *  HpkeConfig Section 4.2.1: "application/dap-hpke-config"
 
-   *  Report Section 4.2.2: "message/ppm-report"
+   *  Report Section 4.2.2: "message/dap-report"
 
-   *  AggregateInitReq Section 4.4: "message/ppm-aggregate-init-req"
+   *  AggregateInitializeReq Section 4.4: "message/dap-aggregate-
+      initialize-req"
 
-   *  AggregateInitResp Section 4.4: "message/ppm-aggregate-init-resp"
+   *  AggregateInitializeResp Section 4.4: "message/dap-aggregate-
+      initialize-resp"
 
-   *  AggregateContinueReq Section 4.4: "message/ppm-aggregate-continue-
+   *  AggregateContinueReq Section 4.4: "message/dap-aggregate-continue-
       req"
 
-   *  AggregateContinueResp Section 4.4: "message/ppm-aggregate-
+   *  AggregateContinueResp Section 4.4: "message/dap-aggregate-
       continue-resp"
 
-   *  AggregateShareReq Section 4.4: "message/ppm-aggregate-share-req"
+   *  AggregateShareReq Section 4.4: "message/dap-aggregate-share-req"
 
-   *  AggregateShareResp Section 4.4: "message/ppm-aggregate-share-resp"
+   *  AggregateShareResp Section 4.4: "message/dap-aggregate-share-resp"
 
-   *  CollectReq Section 4.4: "message/ppm-collect-req"
+   *  CollectReq Section 4.4: "message/dap-collect-req"
 
-   *  CollectResp Section 4.4: "message/ppm-collect-resp"
+   *  CollectResp Section 4.4: "message/dap-collect-resp"
 
    The definition for each media type is in the following subsections.
 
@@ -2009,11 +2084,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    [OPEN ISSUE: Solicit review of these allocations from domain
    experts.]
 
-7.1.1.  "application/ppm-hpke-config" media type
+7.1.1.  "application/dap-hpke-config" media type
 
    Type name:  application
 
-   Subtype name:  ppm-hpke-config
+   Subtype name:  dap-hpke-config
 
    Required parameters:  N/A
 
@@ -2050,11 +2125,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.2.  "message/ppm-report" media type
+7.1.2.  "message/dap-report" media type
 
    Type name:  message
 
-   Subtype name:  ppm-report
+   Subtype name:  dap-report
 
    Required parameters:  N/A
 
@@ -2091,11 +2166,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.3.  "message/ppm-aggregate-continue-req" media type
+7.1.3.  "message/dap-aggregate-continue-req" media type
 
    Type name:  message
 
-   Subtype name:  ppm-aggregate-init-req
+   Subtype name:  dap-aggregate-initialize-req
 
    Required parameters:  N/A
 
@@ -2132,11 +2207,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.4.  "message/ppm-aggregate-init-resp" media type
+7.1.4.  "message/dap-aggregate-initialize-resp" media type
 
    Type name:  message
 
-   Subtype name:  ppm-aggregate-init-resp
+   Subtype name:  dap-aggregate-initialize-resp
 
    Required parameters:  N/A
 
@@ -2173,11 +2248,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.5.  "message/ppm-aggregate-continue-req" media type
+7.1.5.  "message/dap-aggregate-continue-req" media type
 
    Type name:  message
 
-   Subtype name:  ppm-aggregate-continue-req
+   Subtype name:  dap-aggregate-continue-req
 
    Required parameters:  N/A
 
@@ -2214,11 +2289,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.6.  "message/ppm-aggregate-continue-resp" media type
+7.1.6.  "message/dap-aggregate-continue-resp" media type
 
    Type name:  init
 
-   Subtype name:  ppm-aggregate-continue-resp
+   Subtype name:  dap-aggregate-continue-resp
 
    Required parameters:  N/A
 
@@ -2255,11 +2330,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.7.  "message/ppm-aggregate-share-req" media type
+7.1.7.  "message/dap-aggregate-share-req" media type
 
    Type name:  message
 
-   Subtype name:  ppm-aggregate-share-req
+   Subtype name:  dap-aggregate-share-req
 
    Required parameters:  N/A
 
@@ -2296,11 +2371,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.8.  "message/ppm-aggregate-share-resp" media type
+7.1.8.  "message/dap-aggregate-share-resp" media type
 
    Type name:  message
 
-   Subtype name:  ppm-aggregate-share-resp
+   Subtype name:  dap-aggregate-share-resp
 
    Required parameters:  N/A
 
@@ -2337,11 +2412,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.9.  "message/ppm-collect-req" media type
+7.1.9.  "message/dap-collect-req" media type
 
    Type name:  message
 
-   Subtype name:  ppm-collect-req
+   Subtype name:  dap-collect-req
 
    Required parameters:  N/A
 
@@ -2378,11 +2453,11 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 
    Change controller:  IESG
 
-7.1.10.  "message/ppm-collect-req" media type
+7.1.10.  "message/dap-collect-req" media type
 
    Type name:  message
 
-   Subtype name:  ppm-collect-req
+   Subtype name:  dap-collect-req
 
    Required parameters:  N/A
 
@@ -2428,17 +2503,17 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
    [TODO: define how we want to structure this registry when the time
    comes]
 
-7.3.  URN Sub-namespace for PPM (urn:ietf:params:ppm)
+7.3.  URN Sub-namespace for DAP (urn:ietf:params:ppm:dap)
 
    The following value [will be/has been] registered in the "IETF URN
    Sub-namespace for Registered Protocol Parameter Identifiers"
    registry, following the template in [RFC3553]:
 
-   Registry name:  ppm
+   Registry name:  dap
 
    Specification:  [[THIS DOCUMENT]]
 
-   Repository:  http://www.iana.org/assignments/ppm
+   Repository:  http://www.iana.org/assignments/dap
 
    Index value:  No transformation needed.
 
@@ -2453,13 +2528,6 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
 9.  References
 
 9.1.  Normative References
-
-   [I-D.irtf-cfrg-hpke]
-              Barnes, R. L., Bhargavan, K., Lipp, B., and C. A. Wood,
-              "Hybrid Public Key Encryption", Work in Progress,
-              Internet-Draft, draft-irtf-cfrg-hpke-12, 2 September 2021,
-              <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
-              hpke-12>.
 
    [I-D.thomson-http-oblivious]
               Thomson, M. and C. A. Wood, "Oblivious HTTP", Work in
@@ -2506,6 +2574,10 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/rfc/rfc8446>.
 
+   [RFC9180]  Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
+              Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
+              February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
+
 9.2.  Informative References
 
    [BBCGGI19] Boneh, D., Boyle, E., Corrigan-Gibbs, H., Gilboa, N., and
@@ -2536,7 +2608,7 @@ encrypted_agg_share = context.Seal(AggregateShareReq.batch_interval,
               <https://privacytools.seas.harvard.edu/files/privacytools/
               files/complexityprivacy_1.pdf>.
 
-   [VDAF]     Barnes, R. L., Patton, C., and P. Schoppmann, "Verifiable
+   [VDAF]     Barnes, R., Patton, C., and P. Schoppmann, "Verifiable
               Distributed Aggregation Functions", Work in Progress,
               Internet-Draft, draft-irtf-cfrg-vdaf-00, 27 April 2022,
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
