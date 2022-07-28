@@ -299,6 +299,7 @@ includes the following parameters:
   choices.
 * The minimum "batch size" of reports which can be aggregated.
 * The rate at which measurements can be taken, i.e., the "minimum batch window".
+<!-- is this min batch duration? change to make this optional -->
 
 These parameters are distributed out of band to the clients and to the
 aggregators. They are distributed by the collecting entity in some authenticated
@@ -509,6 +510,7 @@ number generator. Each task has the following parameters associated with it:
   newest report in a batch. This defines the boundaries with which the batch
   interval of each collect request must be aligned. (See
   {{batch-parameter-validation}}.)
+  <!-- TBD: make optional if using chunk collect -->
 * A unique identifier for the VDAF instance used for the task, including the
   type of measurement associated with the task.
 
@@ -1089,7 +1091,7 @@ The helper then awaits the next message from the leader.
 In this phase, the collector requests aggregate shares from each aggregator
 and then locally combines them to yield a single, aggregate output. In particular,
 the collector asks the leader to collect and return the results for a given
-DAP task over a given time period. The aggregate shares are encrypted to the
+DAP task over a given batch selector. The aggregate shares are encrypted to the
 collector so that it can decrypt and combine them to yield the aggregate output.
 This entire process is composed of two interactions:
 
@@ -1115,20 +1117,32 @@ attacks.]
 ~~~
 struct {
   TaskID task_id;
-  Interval batch_interval;
+  BatchSelector batch_selector;
+  select (batch_selector) {
+    case interval:
+       Interval batch_interval;
+    case chunk:
+       uint32 batch_id;
+  };
   opaque agg_param<0..2^16-1>; // VDAF aggregation parameter
 } CollectReq;
+
+enum {
+  reserved(0),
+  interval(1),
+  chunk(2),
+} BatchSelector;
 ~~~
 
 The named parameters are:
 
 * `task_id`, the DAP task ID.
-* `batch_interval`, the request's batch interval.
+* `batch_selector`, determines how a batch should be selected.
 * `agg_param`, an aggregation parameter for the VDAF being executed.
   This is the same value as in `AggregateInitializeReq` (see {{leader-init}}).
 
 Depending on the VDAF scheme and how the leader is configured, the leader and
-helper may already have prepared all the reports falling within `batch_interval`
+helper may already have prepared all the reports selected by `batch_selector`
 and be ready to return the aggregate shares right away, but this cannot be
 guaranteed. In fact, for some VDAFs, it is not be possible to begin preparing
 inputs until the collector provides the aggregation parameter in the
@@ -1141,8 +1155,8 @@ response with HTTP status 303 See Other and a Location header containing a URI
 identifying the collect job that can be polled by the collector, called the
 "collect job URI".
 
-The leader then begins working with the helper to prepare the shares falling
-into `CollectReq.batch_interval` (or continues this process, depending on the
+The leader then begins working with the helper to prepare the shares selected by 
+ `CollectReq.batch_selector` (or continues this process, depending on the
 VDAF) as described in {{aggregate-flow}}.
 
 After receiving the response to its CollectReq, the collector makes an HTTP GET
@@ -1188,7 +1202,7 @@ helper drops out?]
 
 The leader obtains each helper's encrypted aggregate share in order to respond
 to the collector's collect response. To do this, the leader first computes a
-checksum over the set of output shares included in the batch window identified
+checksum over the set of output shares selected by the batch selector identified
 by the collect request. The checksum is computed by taking the SHA256 hash of
 each nonce from the client reports included in the aggregation, then combining
 the hash values with a bitwise-XOR operation.
@@ -1200,15 +1214,24 @@ a POST request to `[aggregator]/aggregate_share` with the following message:
 ~~~
 struct {
   TaskID task_id;
-  Interval batch_interval;
+  BatchSelector batch_selector;
+  select (batch_selector) {
+    case interval:
+       Interval batch_interval;
+    case chunk:
+       uint32 batch_id;
+  };
   opaque agg_param<0..2^16-1>;
   uint64 report_count;
   opaque checksum[32];
 } AggregateShareReq;
 ~~~
 
+<!-- TBA: change interval to a new enum -->
+
 * `task_id` is the task ID associated with the DAP parameters.
-* `batch_interval` is the batch interval of the request.
+* `batch_selector`, determines how a batch should be selected.
+<!-- * `batch_interval` is the batch interval of the request. -->
 * `agg_param`, an aggregation parameter for the VDAF being executed.
   This is the same value as in `AggregateInitializeReq` (see {{leader-init}})
   and in `CollectReq` (see {{collect-init}}).
@@ -1285,6 +1308,9 @@ is computed as follows:
 ~~~
 agg_result = VDAF.agg_shares_to_result(agg_param, agg_shares)
 ~~~
+
+### Batch Selection {#batch-selection}
+<!-- TBA -->
 
 ### Aggregate Share Encryption {#aggregate-share-encrypt}
 
